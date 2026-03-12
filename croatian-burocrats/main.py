@@ -38,6 +38,7 @@ def main():
     sdf = sdf.group_by("colour")
 
     sdf = (
+        sdf
         # Define a hopping window of 1h with 10m step
         # You can also pass duration_ms and step_ms as integers of milliseconds
         .tumbling_window(duration_ms=timedelta(minutes=1))
