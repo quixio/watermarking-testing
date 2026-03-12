@@ -62,7 +62,7 @@ deployments:
       - name: TIMESTAMP_COLUMN
         inputType: FreeText
         description: Column containing timestamp values to extract year/month/day/hour from
-        value: timestamp
+        value: ts_ms
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
