@@ -4,6 +4,8 @@ from quixstreams import Application
 from quixstreams.dataframe.windows import Count
 
 import os
+import time
+import random
 from datetime import timedelta
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
@@ -26,7 +28,7 @@ def main():
 
     # Setup necessary objects
     app = Application(
-        consumer_group="my_transformation_v7",
+        consumer_group=f"my_transformation_v7_{random.Random(int(time.time() * 1000)).randint(0, 999999)}",
         auto_create_topics=True,
         auto_offset_reset="earliest"
     )
