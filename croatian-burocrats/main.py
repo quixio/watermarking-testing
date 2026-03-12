@@ -36,7 +36,7 @@ def main():
     # Repartition by colour so all messages with the same colour
     # end up on the same partition
     sdf = sdf.group_by("colour")
-    sdf = sdf.print(columns=["colour"], metadata=True)
+    sdf = sdf.print(["colour"])
 
     #sdf.to_topic(output_topic)
 
