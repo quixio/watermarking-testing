@@ -78,6 +78,7 @@ def main():
     )
     sdf.print()
 
+    # watermarking
 
     #sdf.to_topic(output_topic)
 
