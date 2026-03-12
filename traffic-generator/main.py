@@ -1,87 +1,85 @@
-# import the Quix Streams modules for interacting with Kafka.
-# For general info, see https://quix.io/docs/quix-streams/introduction.html
-# For sources, see https://quix.io/docs/quix-streams/connectors/sources/index.html
 from quixstreams import Application
 from quixstreams.sources import Source
 
 import os
+import random
+from datetime import datetime, timezone, timedelta
 
-# for local dev, you can load env vars from a .env file
 from dotenv import load_dotenv
 load_dotenv()
 
+BRANDS = [
+    "Toyota", "Honda", "Ford", "BMW", "Mercedes",
+    "Audi", "Volkswagen", "Tesla", "Hyundai", "Kia",
+    "Nissan", "Chevrolet", "Mazda", "Subaru", "Volvo",
+    "Porsche", "Lexus", "Jaguar", "Ferrari", "Lamborghini",
+]
 
-class MemoryUsageGenerator(Source):
+COLOURS = [
+    "Red", "Blue", "Green", "Black", "White",
+    "Silver", "Grey", "Yellow", "Orange", "Purple",
+    "Brown", "Beige", "Gold", "Navy", "Teal",
+    "Maroon", "Coral", "Ivory", "Cyan", "Magenta",
+]
+
+
+class VehicleTrafficGenerator(Source):
     """
-    A Quix Streams Source enables Applications to read data from something other
-    than Kafka and publish it to a desired Kafka topic.
-
-    You provide a Source to an Application, which will handle the Source's lifecycle.
-
-    In this case, we have built a new Source that reads from a static set of
-    already loaded json data representing a server's memory usage over time.
-
-    There are numerous pre-built sources available to use out of the box; see:
-    https://quix.io/docs/quix-streams/connectors/sources/index.html
+    Generates 1 hour of vehicle traffic data.
+    Each discrete minute has exactly 10 vehicles per colour (200 vehicles/min).
+    Total: 20 colours × 10 vehicles × 60 minutes = 12,000 messages.
     """
 
-    memory_allocation_data = [
-        {"m": "mem", "host": "host1", "used_percent": 64.56, "time": 1577836800000000000},
-        {"m": "mem", "host": "host2", "used_percent": 71.89, "time": 1577836801000000000},
-        {"m": "mem", "host": "host1", "used_percent": 63.27, "time": 1577836803000000000},
-        {"m": "mem", "host": "host2", "used_percent": 73.45, "time": 1577836804000000000},
-        {"m": "mem", "host": "host1", "used_percent": 62.98, "time": 1577836806000000000},
-        {"m": "mem", "host": "host2", "used_percent": 74.33, "time": 1577836808000000000},
-        {"m": "mem", "host": "host1", "used_percent": 65.21, "time": 1577836810000000000},
-    ]
+    def _generate_plate(self):
+        """Generate a unique numberplate-style key."""
+        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        self._plate_counter += 1
+        prefix = "".join(random.choices(letters, k=2))
+        return f"{prefix}-{self._plate_counter:05d}"
 
     def run(self):
-        """
-        Each Source must have a `run` method.
+        self._plate_counter = 0
+        ts_start = datetime.now(timezone.utc)
+        base_minute = ts_start.replace(second=0, microsecond=0)
 
-        It will include the logic behind your source, contained within a
-        "while self.running" block for exiting when its parent Application stops.
+        for minute_offset in range(60):
+            ts = base_minute + timedelta(minutes=minute_offset)
+            ts_ms = int(ts.timestamp() * 1000)
 
-        There a few methods on a Source available for producing to Kafka, like
-        `self.serialize` and `self.produce`.
-        """
-        data = iter(self.memory_allocation_data)
-        # either break when the app is stopped, or data is exhausted
-        while self.running:
-            try:
-                event = next(data)
-                event_serialized = self.serialize(key=event["host"], value=event)
-                self.produce(key=event_serialized.key, value=event_serialized.value)
-                print("Source produced event successfully!")
-            except StopIteration:
-                print("Source finished producing messages.")
+            for colour in COLOURS:
+                for _ in range(10):
+                    brand = random.choice(BRANDS)
+                    plate = self._generate_plate()
+                    passengers = random.randint(1, 4)
+
+                    value = {
+                        "plate": plate,
+                        "brand": brand,
+                        "colour": colour,
+                        "passengers": passengers,
+                        "ts_start": ts_start.isoformat(),
+                        "ts": ts_ms,
+                    }
+
+                    msg = self.serialize(key=brand, value=value)
+                    self.produce(key=msg.key, value=msg.value)
+
+            if not self.running:
                 return
+
+            print(f"Produced minute {minute_offset + 1}/60 ({ts.isoformat()})")
+
+        print("Finished producing 12,000 vehicle messages.")
 
 
 def main():
-    """ Here we will set up our Application. """
-
-    # Setup necessary objects
-    app = Application(consumer_group="data_producer", auto_create_topics=True)
-    memory_usage_source = MemoryUsageGenerator(name="memory-usage-producer")
+    app = Application(consumer_group="traffic_generator", auto_create_topics=True)
+    source = VehicleTrafficGenerator(name="vehicle-traffic-producer")
     output_topic = app.topic(name=os.environ["output"])
 
-    # --- Setup Source ---
-    # OPTION 1: no additional processing with a StreamingDataFrame
-    # Generally the recommended approach; no additional operations needed!
-    app.add_source(source=memory_usage_source, topic=output_topic)
-
-    # OPTION 2: additional processing with a StreamingDataFrame
-    # Useful for consolidating additional data cleanup into 1 Application.
-    # In this case, do NOT use `app.add_source()`.
-    # sdf = app.dataframe(source=source)
-    # <sdf operations here>
-    # sdf.to_topic(topic=output_topic) # you must do this to output your data!
-
-    # With our pipeline defined, now run the Application
+    app.add_source(source=source, topic=output_topic)
     app.run()
 
 
-#  Sources require execution under a conditional main
 if __name__ == "__main__":
     main()
