@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 def main():
     # Use the message's own "ts" field (epoch ms) as the event timestamp.
     # This ensures windowing is driven by event time, not Kafka broker time.
-    def ts_extractor(value, _headers, _timestamp, _timestamp_type) -> int:
-        return value["ts"]
+    def ts_extractor(_value, _headers, timestamp, _timestamp_type) -> int:
+        return timestamp
 
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
