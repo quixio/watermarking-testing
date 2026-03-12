@@ -40,7 +40,13 @@ def main():
 
     sdf = app.dataframe(topic=input_topic)
 
-    # 60-second tumbling window across ALL messages (no group_by).
+    # Force all messages onto a single partition by grouping on a constant key.
+    # This guarantees exactly one window state across all replicas, so .final()
+    # produces exactly one message per 60-second window.
+    sdf["_all"] = "all"
+    sdf = sdf.group_by("_all")
+
+    # 60-second tumbling window – one shared state for every incoming message.
     # The reducer builds a single dict of {colour: count} for the whole window.
     # .final() emits exactly one message when the 60-second window closes.
     sdf = (
