@@ -40,12 +40,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: highway
-    configuration:
-      partitions: 16
-      replicationFactor: 2
-      retentionInMinutes: -1
-      retentionInBytes: 4275044352
   - name: colours
     configuration:
       partitions: 16
