@@ -19,7 +19,7 @@ deployments:
         inputType: OutputTopic
         description: Name of the output topic to write into
         required: true
-        value: highway
+        value: highway-2
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
@@ -27,12 +27,12 @@ deployments:
     resources:
       cpu: 200
       memory: 500
-      replicas: 16
+      replicas: 4
     variables:
       - name: input
         inputType: InputTopic
         description: Name of the input topic to listen to.
-        value: highway
+        value: highway-2
       - name: output
         inputType: OutputTopic
         description: Name of the output topic to write to.
@@ -47,3 +47,9 @@ topics:
       retentionInMinutes: -1
       retentionInBytes: 4275044352
   - name: colours
+  - name: highway-2
+    configuration:
+      partitions: 4
+      replicationFactor: 2
+      retentionInMinutes: -1
+      retentionInBytes: 52428800
