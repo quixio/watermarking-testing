@@ -40,9 +40,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: colours
-    configuration:
-      partitions: 16
   - name: highway-2
     configuration:
       partitions: 4
