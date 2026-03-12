@@ -48,7 +48,7 @@ def main():
 
     sdf = (
         sdf
-        .tumbling_window(duration_ms=timedelta(seconds=60))
+        .tumbling_window(duration_ms=timedelta(seconds=1))
         .reduce(
             initializer=lambda row: {row["colour"]: 1},
             reducer=lambda agg, row: {**agg, row["colour"]: agg.get(row["colour"], 0) + 1},
