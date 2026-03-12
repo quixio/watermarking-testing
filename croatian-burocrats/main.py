@@ -61,7 +61,7 @@ def main():
         return row
 
     sdf = sdf.apply(count_colour)
-    sdf.print()
+    sdf.print(lambda a: f'+++{a}')
 
     # sdf.print_table(
     #     size=20,
