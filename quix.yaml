@@ -9,7 +9,7 @@ metadata:
 topics:
   - name: highway
     configuration:
-      partitions: 8
+      partitions: 16
       replicationFactor: 2
       retentionInMinutes: -1
       retentionInBytes: 4275044352
