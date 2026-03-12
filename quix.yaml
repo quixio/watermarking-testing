@@ -54,3 +54,7 @@ topics:
       retentionInMinutes: -1
       retentionInBytes: 52428800
   - name: transform
+  - name: watermarks__my_transformation_v7_175246--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
