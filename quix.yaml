@@ -51,3 +51,4 @@ topics:
     configuration:
       partitions: 4
   - name: csv-data
+  - name: tsbs_data_transformed
