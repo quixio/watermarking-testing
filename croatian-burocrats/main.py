@@ -75,7 +75,8 @@ def main():
 
         # Emit updates for each incoming message
         .final()
-    )
+    ).apply(lambda result: ("count": result["value"], "ts_start": result.get("ts_start")))
+
     sdf.print()
 
 
