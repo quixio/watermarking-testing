@@ -150,3 +150,7 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
+  - name: watermarks__my_transformation_v7_657402--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
