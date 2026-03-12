@@ -53,3 +53,4 @@ topics:
       replicationFactor: 2
       retentionInMinutes: -1
       retentionInBytes: 1758461952
+  - name: highway
