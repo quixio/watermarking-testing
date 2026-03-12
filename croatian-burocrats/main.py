@@ -77,12 +77,12 @@ def main():
         .final()
     )
     sdf.print(lambda a: f'{a["value"]}')
-    sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
+    # sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
 
     # sdf.print()
 
 
-    sdf.to_topic(output_topic)
+    # sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
