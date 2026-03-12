@@ -60,8 +60,8 @@ def main():
         row["colour_count"] = colour_counts[colour]
         return row
 
-    sdf.print()
     sdf = sdf.apply(count_colour)
+    sdf.print()
 
     # sdf.print_table(
     #     size=20,
