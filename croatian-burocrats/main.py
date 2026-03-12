@@ -55,19 +55,19 @@ def main():
     sdf.print()
 
     
-    # def count_colour(row):
-    #     colour = row["colour"]
-    #     colour_counts[colour] = colour_counts.get(colour, 0) + 1
-    #     row["colour_count"] = colour_counts[colour]
-    #     return row
+    def count_colour(row):
+        colour = row["colour"]
+        colour_counts[colour] = colour_counts.get(colour, 0) + 1
+        row["colour_count"] = colour_counts[colour]
+        return row
 
-    # sdf = sdf.apply(count_colour)
+    sdf = sdf.apply(count_colour)
 
-    # sdf.print_table(
-    #     size=20,
-    #     title="Colours",
-    #     columns=["colour", "colour_count"]
-    # )
+    sdf.print_table(
+        size=20,
+        title="Colours",
+        columns=["colour", "colour_count"]
+    )
     #sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
