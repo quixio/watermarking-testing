@@ -46,12 +46,8 @@ def main():
     sdf["_all"] = "all"
     sdf = sdf.group_by("_all")
 
-    # Save reference here so both windows branch from the same pre-window SDF.
-    sdf_base = sdf
-
-    # ── Branch 1: 60-second colour counts ────────────────────────────────────
-    sdf_60s = (
-        sdf_base
+    sdf = (
+        sdf
         .tumbling_window(duration_ms=timedelta(seconds=60))
         .reduce(
             initializer=lambda row: {row["colour"]: 1},
@@ -68,27 +64,7 @@ def main():
             logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
-    sdf_60s.apply(log_window).to_topic(output_topic)
-
-    # ── Branch 2: 60-minute grand total ──────────────────────────────────────
-    sdf_60m = (
-        sdf_base
-        .tumbling_window(duration_ms=timedelta(minutes=60))
-        .reduce(
-            initializer=lambda _row: {"total": 1},
-            reducer=lambda agg, _row: {"total": agg["total"] + 1},
-        )
-        .final()
-    )
-
-    def log_total(result):
-        total = result["value"]["total"]
-        start = result["start"]
-        end   = result["end"]
-        logger.info("TOTAL count=%4d  window=[%d – %d]", total, start, end)
-        return result
-
-    sdf_60m.apply(log_total).to_topic(output_topic)
+    sdf.apply(log_window).to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
