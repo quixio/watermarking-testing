@@ -25,9 +25,9 @@ COLOURS = [
 
 class VehicleTrafficGenerator(Source):
     """
-    Generates 1 hour of vehicle traffic data.
-    Each discrete minute has exactly 10 vehicles per colour (200 vehicles/min).
-    Total: 20 colours × 10 vehicles × 60 minutes = 12,000 messages.
+    Generates 60 seconds of vehicle traffic data.
+    Each discrete second has exactly 10 vehicles per colour (200 vehicles/sec).
+    Total: 20 colours × 10 vehicles × 60 seconds = 12,000 messages.
     """
 
     def _generate_plate(self):
@@ -40,18 +40,18 @@ class VehicleTrafficGenerator(Source):
     def run(self):
         self._plate_counter = 0
         ts_start = datetime.now(timezone.utc)
-        base_minute = ts_start.replace(second=0, microsecond=0)
+        base_second = ts_start.replace(microsecond=0)
 
-        for minute_offset in range(60):
-            minute_start = base_minute + timedelta(minutes=minute_offset)
-            minute_start_ms = int(minute_start.timestamp() * 1000)
+        for second_offset in range(60):
+            second_start = base_second + timedelta(seconds=second_offset)
+            second_start_ms = int(second_start.timestamp() * 1000)
 
             for colour in COLOURS:
                 for _ in range(10):
                     brand = random.choice(BRANDS)
                     plate = self._generate_plate()
                     passengers = random.randint(1, 4)
-                    ts_ms = minute_start_ms + random.randint(0, 59_999)
+                    ts_ms = second_start_ms + random.randint(0, 999)
 
                     value = {
                         "plate": plate,
@@ -68,7 +68,7 @@ class VehicleTrafficGenerator(Source):
             if not self.running:
                 return
 
-            print(f"Produced minute {minute_offset + 1}/60 ({minute_start.isoformat()})")
+            print(f"Produced second {second_offset + 1}/60 ({second_start.isoformat()})")
 
         print("Finished producing 12,000 vehicle messages.")
 
