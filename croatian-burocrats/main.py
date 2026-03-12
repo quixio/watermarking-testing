@@ -77,7 +77,7 @@ def main():
         .final()
     )
     
-    sdf.apply(lambda result: ("count": result["value"], "ts_start": result.get("ts_start")))
+    sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
 
     sdf.print()
 
