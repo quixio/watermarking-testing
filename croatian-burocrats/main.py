@@ -55,7 +55,7 @@ def main():
             initializer=lambda row: {"colour": row["colour"], "count": 1},
             reducer=lambda agg, _: {**agg, "count": agg["count"] + 1},
         )
-        .current()  # emits on every update; guarantees output even if the window never closes
+        .final()  # emits on every update; guarantees output even if the window never closes
     )
 
     def log_window(result):
