@@ -41,9 +41,7 @@ def main():
     output_topic = app.topic(name=os.environ["output"])
     sdf = app.dataframe(topic=input_topic)
 
-
     sdf.print(lambda a: f'---{a}')
-
 
     # Repartition by colour so all messages with the same colour
     # end up on the same partition
