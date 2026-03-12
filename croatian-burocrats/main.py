@@ -45,7 +45,7 @@ def main():
         .tumbling_window(duration_ms=timedelta(minutes=1))
         
         # Specify the "mean" aggregate function
-        .agg(colour_count=Count("colour"))
+        .agg(colour_count=Count())
 
         # Emit updates for each incoming message
         .current()
