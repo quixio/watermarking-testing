@@ -42,15 +42,16 @@ def main():
 
     # Force all messages onto a single partition by grouping on a constant key.
     # This guarantees exactly one window state across all replicas, so .final()
-    # produces exactly one message per 60-second window.
+    # produces exactly one message per window.
     sdf["_all"] = "all"
     sdf = sdf.group_by("_all")
 
-    # 60-second tumbling window – one shared state for every incoming message.
-    # The reducer builds a single dict of {colour: count} for the whole window.
-    # .final() emits exactly one message when the 60-second window closes.
-    sdf = (
-        sdf
+    # Save reference here so both windows branch from the same pre-window SDF.
+    sdf_base = sdf
+
+    # ── Branch 1: 60-second colour counts ────────────────────────────────────
+    sdf_60s = (
+        sdf_base
         .tumbling_window(duration_ms=timedelta(seconds=60))
         .reduce(
             initializer=lambda row: {row["colour"]: 1},
@@ -59,17 +60,35 @@ def main():
         .final()
     )
 
-    # Log and forward the single summary message for the closed window.
     def log_window(result):
-        counts = result["value"]   # {"Red": 12, "Blue": 7, ...}
+        counts = result["value"]
         start  = result["start"]
         end    = result["end"]
         for colour, count in sorted(counts.items()):
             logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
-    sdf = sdf.apply(log_window)
-    sdf.to_topic(output_topic)
+    sdf_60s.apply(log_window).to_topic(output_topic)
+
+    # ── Branch 2: 60-minute grand total ──────────────────────────────────────
+    sdf_60m = (
+        sdf_base
+        .tumbling_window(duration_ms=timedelta(minutes=60))
+        .reduce(
+            initializer=lambda _row: {"total": 1},
+            reducer=lambda agg, _row: {"total": agg["total"] + 1},
+        )
+        .final()
+    )
+
+    def log_total(result):
+        total = result["value"]["total"]
+        start = result["start"]
+        end   = result["end"]
+        logger.info("TOTAL count=%4d  window=[%d – %d]", total, start, end)
+        return result
+
+    sdf_60m.apply(log_total).to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
