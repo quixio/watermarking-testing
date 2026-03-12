@@ -12,7 +12,7 @@ load_dotenv()
 
 def flatten_colours(row: dict) -> dict:
     """Flatten the windowed colour counts into a single row using 'end' as timestamp."""
-    flat = {"timestamp": row["end"]}
+    flat = {"time": row["end"]}
     flat.update(row["value"])
     return flat
 
@@ -22,7 +22,7 @@ def define_pipeline(sdf: StreamingDataFrame):
     sdf = sdf.apply(flatten_colours)
 
     # Set row timestamp from the 'end' field (milliseconds → nanoseconds for Quix)
-    sdf = sdf.set_timestamp(lambda row, *_: row["timestamp"])
+    sdf = sdf.set_timestamp(lambda row, *_: row["time"])
 
     # Optional printing for debugging.
     #sdf = sdf.print(metadata=True)
