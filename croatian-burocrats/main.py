@@ -1,6 +1,7 @@
 # import the Quix Streams modules for interacting with Kafka.
 # For general info, see https://quix.io/docs/quix-streams/introduction.html
 from quixstreams import Application
+from quixstreams.dataframe.windows import Count
 
 import os
 from datetime import timedelta
@@ -38,6 +39,7 @@ def main():
     sdf = sdf.group_by("colour")
 
     sdf = (
+        sdf
         # Define a hopping window of 1h with 10m step
         # You can also pass duration_ms and step_ms as integers of milliseconds
         .tumbling_window(duration_ms=timedelta(minutes=1))
