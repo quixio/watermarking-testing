@@ -40,28 +40,30 @@ def main():
 
     sdf = app.dataframe(topic=input_topic)
 
-    # Force all messages onto a single partition by grouping on a constant key.
-    # This guarantees exactly one window state across all replicas, so .final()
-    # produces exactly one message per window.
-    sdf["_all"] = "all"
-    sdf = sdf.group_by("_all")
+    # Repartition by colour so each colour has its own window state.
+    sdf = sdf.group_by("colour")
+
+    # group_by repartitions via an internal Kafka topic and stamps messages with
+    # broker time, losing the original event time.  Re-apply it from value["ts"]
+    # (epoch ms, as produced) so the tumbling window uses event time correctly.
+    sdf = sdf.set_timestamp(lambda row, *_: row["ts"])
 
     sdf = (
         sdf
         .tumbling_window(duration_ms=timedelta(seconds=1), grace_ms=timedelta(seconds=1))
         .reduce(
-            initializer=lambda row: {row["colour"]: 1},
-            reducer=lambda agg, row: {**agg, row["colour"]: agg.get(row["colour"], 0) + 1},
+            initializer=lambda row: {"colour": row["colour"], "count": 1},
+            reducer=lambda agg, _: {**agg, "count": agg["count"] + 1},
         )
-        .final()
+        .current()  # emits on every update; guarantees output even if the window never closes
     )
 
     def log_window(result):
-        counts = result["value"]
+        colour = result["value"]["colour"]
+        count  = result["value"]["count"]
         start  = result["start"]
         end    = result["end"]
-        for colour, count in sorted(counts.items()):
-            logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
+        logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
     sdf.apply(log_window).to_topic(output_topic)
