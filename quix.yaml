@@ -47,3 +47,9 @@ topics:
       retentionInMinutes: -1
       retentionInBytes: 4275044352
   - name: colours
+  - name: highway-2
+    configuration:
+      partitions: 4
+      replicationFactor: 2
+      retentionInMinutes: -1
+      retentionInBytes: 52428800
