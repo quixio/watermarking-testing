@@ -36,8 +36,12 @@ def main():
     # Repartition by colour so all messages with the same colour
     # end up on the same partition
     sdf = sdf.group_by("colour")
-    sdf = sdf.print(["colour"])
 
+    sdf.print_table(
+        size=20,
+        title="Colours",
+        columns=["colour"]
+    )
     #sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
