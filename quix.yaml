@@ -50,3 +50,4 @@ topics:
   - name: colours
     configuration:
       partitions: 4
+  - name: csv-data
