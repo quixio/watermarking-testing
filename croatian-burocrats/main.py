@@ -40,7 +40,7 @@ def main():
     sdf = (
         # Define a hopping window of 1h with 10m step
         # You can also pass duration_ms and step_ms as integers of milliseconds
-        tumbling_window(duration_ms=timedelta(minutes=1))
+        .tumbling_window(duration_ms=timedelta(minutes=1))
         
         # Specify the "mean" aggregate function
         .agg(colour_count=Count(column="Colour"))
