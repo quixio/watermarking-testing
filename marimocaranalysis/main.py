@@ -48,12 +48,10 @@ def _(QuixLakeClient, os):
 def _(mo):
     # TODO: Modify the SQL query for your data
     default_query = """
-    SELECT
-    Timestamp as time,
-    value
-    FROM your_table
-    ORDER BY Timestamp
-    LIMIT 1000
+    SELECT *
+    FROM cartablec
+    WHERE year = 2026 AND month = 03 AND day = 12 AND hour = 16
+    LIMIT 100
     """.strip()
 
     sql_form = mo.ui.code_editor(
