@@ -32,7 +32,12 @@ def main():
         auto_create_topics=True,
         auto_offset_reset="earliest"
     )
-    input_topic = app.topic(name=os.environ["input"])
+
+    def custom_ts_extractor(value, headers, timestamp, timestamp_type):
+        return value["ts"]  #
+
+
+    input_topic = app.topic(name=os.environ["input"], timestamp_extractor=custom_ts_extractor)
     output_topic = app.topic(name=os.environ["output"])
     sdf = app.dataframe(topic=input_topic)
 
