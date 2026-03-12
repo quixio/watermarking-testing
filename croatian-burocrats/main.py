@@ -58,11 +58,11 @@ def main():
 
     sdf = sdf.apply(count_colour)
 
-    sdf.print_table(
-        size=20,
-        title="Colours",
-        columns=["colour", "colour_count"]
-    )
+    # sdf.print_table(
+    #     size=20,
+    #     title="Colours",
+    #     columns=["colour", "colour_count"]
+    # )
 
     sdf = (
         sdf
@@ -76,7 +76,7 @@ def main():
         # Emit updates for each incoming message
         .final()
     )
-    
+    sdf.print()
     sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
 
     # sdf.print()
