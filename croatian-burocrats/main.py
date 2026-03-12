@@ -26,7 +26,7 @@ def main():
 
     # Setup necessary objects
     app = Application(
-        consumer_group="my_transformation_v6",
+        consumer_group="my_transformation_v7",
         auto_create_topics=True,
         auto_offset_reset="earliest"
     )
