@@ -49,10 +49,7 @@ def main():
     # end up on the same partition
     sdf = sdf.group_by("colour")
 
-   
-
     colour_counts = {}
-
     
     def count_colour(row):
         colour = row["colour"]
@@ -82,7 +79,6 @@ def main():
     #     .final()
     # )
     # sdf.print(lambda a: f'{a["value"]}')
-
 
     # sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
     # sdf.print()
