@@ -3,7 +3,7 @@
 from quixstreams import Application
 
 import os
-
+from datetime import timedelta
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
 load_dotenv()
@@ -36,6 +36,18 @@ def main():
     # Repartition by colour so all messages with the same colour
     # end up on the same partition
     sdf = sdf.group_by("colour")
+
+    sdf = (
+        # Define a hopping window of 1h with 10m step
+        # You can also pass duration_ms and step_ms as integers of milliseconds
+        .tumbling_window(duration_ms=timedelta(minutes=1))
+        
+        # Specify the "mean" aggregate function
+        .agg(colour_count=Count(column="Colour"))
+        
+        # Emit updates for each incoming message
+        .current()
+    )
 
     colour_counts = {}
 
