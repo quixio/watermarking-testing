@@ -5,7 +5,7 @@
 
 import marimo
 
-__generated_with = "0.16.4"
+__generated_with = "0.20.4"
 app = marimo.App(width="full")
 
 
@@ -13,25 +13,29 @@ app = marimo.App(width="full")
 def _():
     import os
     import marimo as mo
+
     return mo, os
 
 
 @app.cell
 def _():
     from quixlake import QuixLakeClient
+
     return (QuixLakeClient,)
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Query QuixLake Data""")
+    mo.md(r"""
+    ## Query QuixLake Data
+    """)
     return
 
 
 @app.cell
 def _(QuixLakeClient, os):
     # TODO: Replace with your QuixLake URL
-    QUIXLAKE_URL = "https://your-quixlake-instance.quix.io"
+    QUIXLAKE_URL = "https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io"
 
     client = QuixLakeClient(
         base_url=QUIXLAKE_URL,
@@ -44,13 +48,13 @@ def _(QuixLakeClient, os):
 def _(mo):
     # TODO: Modify the SQL query for your data
     default_query = """
-SELECT
+    SELECT
     Timestamp as time,
     value
-FROM your_table
-ORDER BY Timestamp
-LIMIT 1000
-""".strip()
+    FROM your_table
+    ORDER BY Timestamp
+    LIMIT 1000
+    """.strip()
 
     sql_form = mo.ui.code_editor(
         value=default_query,
