@@ -79,7 +79,7 @@ def main():
     
     sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
 
-    sdf.print()
+    # sdf.print()
 
 
     sdf.to_topic(output_topic)
