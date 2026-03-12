@@ -42,7 +42,7 @@ def main():
     sdf = app.dataframe(topic=input_topic)
 
 
-    sdf.print(lambda a: "abc")
+    sdf.print(lambda a: f'---{a}')
 
 
     # Repartition by colour so all messages with the same colour
