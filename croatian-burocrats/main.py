@@ -80,7 +80,7 @@ def main():
     sdf.print()
 
 
-    sdf.to_topic(output_topic)
+    # sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
