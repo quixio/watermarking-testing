@@ -36,6 +36,8 @@ def main():
         timestamp_extractor=ts_extractor,
     )
 
+    output_topic = app.topic(name="colours")
+
     sdf = app.dataframe(topic=input_topic)
 
     # Repartition by colour – each colour lands on a dedicated partition
@@ -69,6 +71,7 @@ def main():
         return result
 
     sdf = sdf.apply(log_window)
+    sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
