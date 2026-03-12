@@ -9,7 +9,7 @@ deployments:
   - name: Traffic Generator
     application: traffic-generator
     version: latest
-    deploymentType: Service
+    deploymentType: Job
     resources:
       cpu: 2000
       memory: 6500
