@@ -43,14 +43,15 @@ class VehicleTrafficGenerator(Source):
         base_minute = ts_start.replace(second=0, microsecond=0)
 
         for minute_offset in range(60):
-            ts = base_minute + timedelta(minutes=minute_offset)
-            ts_ms = int(ts.timestamp() * 1000)
+            minute_start = base_minute + timedelta(minutes=minute_offset)
+            minute_start_ms = int(minute_start.timestamp() * 1000)
 
             for colour in COLOURS:
                 for _ in range(10):
                     brand = random.choice(BRANDS)
                     plate = self._generate_plate()
                     passengers = random.randint(1, 4)
+                    ts_ms = minute_start_ms + random.randint(0, 59_999)
 
                     value = {
                         "plate": plate,
@@ -67,7 +68,7 @@ class VehicleTrafficGenerator(Source):
             if not self.running:
                 return
 
-            print(f"Produced minute {minute_offset + 1}/60 ({ts.isoformat()})")
+            print(f"Produced minute {minute_offset + 1}/60 ({minute_start.isoformat()})")
 
         print("Finished producing 12,000 vehicle messages.")
 
