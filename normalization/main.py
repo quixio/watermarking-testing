@@ -4,28 +4,29 @@ from quixstreams import Application
 from quixstreams.dataframe import StreamingDataFrame
 
 import os
-from datetime import datetime
 
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
 load_dotenv()
 
 
-def define_pipeline(sdf: StreamingDataFrame):
-    
-    # Do StreamingDataFrame operations/transformations here
-    sdf = sdf.apply(lambda row: row).filter(lambda row: True)
+def flatten_colours(row: dict) -> dict:
+    """Flatten the windowed colour counts into a single row using 'end' as timestamp."""
+    flat = {"timestamp": row["end"]}
+    flat.update(row["value"])
+    return flat
 
-    # Set row timestamp from payload.    
-    sdf = sdf.set_timestamp(lambda row, *_: int(row["time"] / 1E6))
-    
-    sdf["time"] = sdf["time"].apply(lambda epoch: str(datetime.fromtimestamp(epoch / 1E9)))
-    
-    sdf = sdf.tumbling_window(3000).count().final()
-    
+
+def define_pipeline(sdf: StreamingDataFrame):
+
+    sdf = sdf.apply(flatten_colours)
+
+    # Set row timestamp from the 'end' field (milliseconds → nanoseconds for Quix)
+    sdf = sdf.set_timestamp(lambda row, *_: row["timestamp"])
+
     # Optional printing for debugging.
     #sdf = sdf.print(metadata=True)
-    
+
     return sdf
 
 
@@ -37,7 +38,7 @@ def main():
         auto_create_topics=True,
         auto_offset_reset="earliest"
     )
-    input_topic = app.topic(name=os.environ["input"])
+    input_topic = app.topic(name="colours")
     output_topic = app.topic(name=os.environ["output"])
     sdf = app.dataframe(topic=input_topic)
 
