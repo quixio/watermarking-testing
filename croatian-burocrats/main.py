@@ -69,19 +69,19 @@ def main():
     #     columns=["colour", "colour_count"]
     # )
 
-    sdf = (
-        sdf
-        # Define a hopping window of 1h with 10m step
-        # You can also pass duration_ms and step_ms as integers of milliseconds
-        .tumbling_window(duration_ms=timedelta(minutes=1))
+    # sdf = (
+    #     sdf
+    #     # Define a hopping window of 1h with 10m step
+    #     # You can also pass duration_ms and step_ms as integers of milliseconds
+    #     .tumbling_window(duration_ms=timedelta(minutes=1))
         
-        # Specify the "mean" aggregate function
-        .agg(colour_count=Count())
+    #     # Specify the "mean" aggregate function
+    #     .agg(colour_count=Count())
 
-        # Emit updates for each incoming message
-        .final()
-    )
-    sdf.print(lambda a: f'{a["value"]}')
+    #     # Emit updates for each incoming message
+    #     .final()
+    # )
+    # sdf.print(lambda a: f'{a["value"]}')
 
 
     # sdf = sdf.apply(lambda result: {"count": result["value"], "ts_start": result.get("ts_start")})
