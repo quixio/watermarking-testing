@@ -40,34 +40,26 @@ def main():
 
     sdf = app.dataframe(topic=input_topic)
 
-    # Repartition by colour – each colour lands on a dedicated partition
-    # so windowed state per colour is kept in a single replica.
-    sdf = sdf.group_by("colour")
-
-    # 4-second tumbling window: count how many vehicles of each colour
-    # are seen inside every non-overlapping 4-second bucket.
-    # The reducer carries both the colour name and the running count so
-    # the log line has everything it needs without touching the Kafka key.
+    # 60-second tumbling window across ALL messages (no group_by).
+    # The reducer builds a single dict of {colour: count} for the whole window.
+    # .final() emits exactly one message when the 60-second window closes.
     sdf = (
         sdf
-        .tumbling_window(duration_ms=timedelta(seconds=4))
+        .tumbling_window(duration_ms=timedelta(seconds=60))
         .reduce(
-            initializer=lambda row: {"colour": row["colour"], "count": 1},
-            reducer=lambda agg, row: {"colour": agg["colour"], "count": agg["count"] + 1},
+            initializer=lambda row: {row["colour"]: 1},
+            reducer=lambda agg, row: {**agg, row["colour"]: agg.get(row["colour"], 0) + 1},
         )
-        .final()   # emit exactly once when the window closes and resets
+        .final()
     )
 
-    # Log one line per closed window: colour, count, and the time frame.
+    # Log and forward the single summary message for the closed window.
     def log_window(result):
-        colour = result["value"]["colour"]
-        count  = result["value"]["count"]
-        start  = result["start"]   # epoch ms
-        end    = result["end"]     # epoch ms
-        logger.info(
-            "colour=%-12s  count=%4d  window=[%d – %d]",
-            colour, count, start, end,
-        )
+        counts = result["value"]   # {"Red": 12, "Blue": 7, ...}
+        start  = result["start"]
+        end    = result["end"]
+        for colour, count in sorted(counts.items()):
+            logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
     sdf = sdf.apply(log_window)
