@@ -7,8 +7,9 @@ variables:
     defaultValue: csv-data
   - name: output
     inputType: OutputTopic
+    multiline: false
     description: Name of the output topic to write to.
-    defaultValue: colours
+    defaultValue: flat-colours
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
