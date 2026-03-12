@@ -33,12 +33,12 @@ def main():
     output_topic = app.topic(name=os.environ["output"])
     sdf = app.dataframe(topic=input_topic)
 
-    # Do StreamingDataFrame operations/transformations here
-    sdf = sdf.apply(lambda row: row).filter(lambda row: True)
+    # Repartition by colour so all messages with the same colour
+    # end up on the same partition
+    sdf = sdf.group_by("colour")
     sdf = sdf.print(metadata=True)
 
-    # Finish off by writing to the final result to the output topic
-    sdf.to_topic(output_topic)
+    #sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
