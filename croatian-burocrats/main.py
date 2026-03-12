@@ -67,7 +67,7 @@ def main():
         .agg(colour_count=Count())
 
         # Emit updates for each incoming message
-        .current()
+        .final()
     )
     sdf.print()
 
