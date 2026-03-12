@@ -4,6 +4,22 @@
 metadata:
   version: 1.0
 
+# This section describes the Deployments of the data pipeline
+deployments:
+  - name: Traffic Generator
+    application: traffic-generator
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 2000
+      memory: 6500
+      replicas: 1
+    variables:
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write into
+        required: true
+        value: highway
 
 # This section describes the Topics of the data pipeline
 topics:
