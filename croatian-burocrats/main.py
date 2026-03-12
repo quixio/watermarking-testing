@@ -25,7 +25,7 @@ def main():
 
     # Setup necessary objects
     app = Application(
-        consumer_group="my_transformation_v4",
+        consumer_group="my_transformation_v5",
         auto_create_topics=True,
         auto_offset_reset="earliest"
     )
@@ -44,7 +44,7 @@ def main():
         
         # Specify the "mean" aggregate function
         .agg(colour_count=Count(column="Colour"))
-        
+
         # Emit updates for each incoming message
         .current()
     )
