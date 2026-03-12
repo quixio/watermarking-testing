@@ -38,21 +38,9 @@ def main():
     # end up on the same partition
     sdf = sdf.group_by("colour")
 
-    sdf = (
-        sdf
-        # Define a hopping window of 1h with 10m step
-        # You can also pass duration_ms and step_ms as integers of milliseconds
-        .tumbling_window(duration_ms=timedelta(minutes=1))
-        
-        # Specify the "mean" aggregate function
-        .agg(colour_count=Count())
-
-        # Emit updates for each incoming message
-        .current()
-    )
+   
 
     colour_counts = {}
-    sdf.print()
 
     
     def count_colour(row):
@@ -68,6 +56,22 @@ def main():
         title="Colours",
         columns=["colour", "colour_count"]
     )
+
+     sdf = (
+        sdf
+        # Define a hopping window of 1h with 10m step
+        # You can also pass duration_ms and step_ms as integers of milliseconds
+        .tumbling_window(duration_ms=timedelta(minutes=1))
+        
+        # Specify the "mean" aggregate function
+        .agg(colour_count=Count())
+
+        # Emit updates for each incoming message
+        .current()
+    )
+    sdf.print()
+
+
     #sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
