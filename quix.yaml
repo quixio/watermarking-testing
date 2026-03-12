@@ -47,3 +47,9 @@ topics:
       retentionInMinutes: -1
       retentionInBytes: 52428800
   - name: csv-data
+  - name: colour
+    configuration:
+      partitions: 1
+      replicationFactor: 2
+      retentionInMinutes: -1
+      retentionInBytes: 1758461952
