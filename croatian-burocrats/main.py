@@ -37,10 +37,20 @@ def main():
     # end up on the same partition
     sdf = sdf.group_by("colour")
 
+    colour_counts = {}
+
+    def count_colour(row):
+        colour = row["colour"]
+        colour_counts[colour] = colour_counts.get(colour, 0) + 1
+        row["colour_count"] = colour_counts[colour]
+        return row
+
+    sdf = sdf.apply(count_colour)
+
     sdf.print_table(
         size=20,
         title="Colours",
-        columns=["colour"]
+        columns=["colour", "colour_count"]
     )
     #sdf.to_topic(output_topic)
 
