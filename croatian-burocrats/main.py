@@ -45,18 +45,18 @@ def main():
 
     # Repartition by colour so all messages with the same colour
     # end up on the same partition
-    sdf = sdf.group_by("colour")
+    # sdf = sdf.group_by("colour")
 
-    colour_counts = {}
+    # colour_counts = {}
     
-    def count_colour(row):
-        colour = row["colour"]
-        colour_counts[colour] = colour_counts.get(colour, 0) + 1
-        row["colour_count"] = colour_counts[colour]
-        return row
+    # def count_colour(row):
+    #     colour = row["colour"]
+    #     colour_counts[colour] = colour_counts.get(colour, 0) + 1
+    #     row["colour_count"] = colour_counts[colour]
+    #     return row
 
-    sdf = sdf.apply(count_colour)
-    sdf.print(lambda a: f'+++{a}')
+    # sdf = sdf.apply(count_colour)
+    # sdf.print(lambda a: f'+++{a}')
 
     # sdf.print_table(
     #     size=20,
