@@ -218,3 +218,11 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
+  - name: watermarks__my_transformation_v7_224792--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
+  - name: watermarks__my_transformation_v7_41041--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
