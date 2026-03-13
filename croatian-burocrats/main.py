@@ -5,6 +5,9 @@ from quixstreams import Application
 
 import os
 import logging
+import threading
+import time
+from collections import defaultdict
 
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
@@ -15,6 +18,49 @@ logging.basicConfig(
     format="%(asctime)s [colour-counter] %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# --- Shared state for independent counters ---
+_lock = threading.Lock()
+_total_received = 0
+_colour_counts = defaultdict(int)
+_last_message_time = 0.0
+
+
+def _inactivity_monitor():
+    """
+    Background thread: prints total message count and per-colour totals
+    once when no new message has arrived for 15 seconds.
+    """
+    last_reported_at = 0.0
+    while True:
+        time.sleep(1)
+        with _lock:
+            lmt = _last_message_time
+            total = _total_received
+            counts = dict(_colour_counts)
+
+        if lmt > 0 and (time.time() - lmt) >= 15 and lmt != last_reported_at:
+            logger.info("No new messages for 15s — total messages received: %d", total)
+            if counts:
+                logger.info("Per-colour totals (cumulative):")
+                for colour, count in sorted(counts.items()):
+                    logger.info("  %-12s : %d", colour, count)
+                logger.info("  %-12s : %d", "GRAND TOTAL", sum(counts.values()))
+            last_reported_at = lmt
+
+
+def _track_message(row):
+    """
+    Loop 1 — counts every raw message received and tracks per-colour totals.
+    Runs before any repartitioning so it sees all messages exactly once.
+    """
+    global _total_received, _last_message_time
+    with _lock:
+        _total_received += 1
+        _last_message_time = time.time()
+        if "colour" in row:
+            _colour_counts[row["colour"]] += 1
+    return row
 
 
 def main():
@@ -38,9 +84,15 @@ def main():
 
     output_topic = app.topic(name="colours")
 
+    # Start the inactivity monitor in the background.
+    threading.Thread(target=_inactivity_monitor, daemon=True).start()
+
     sdf = app.dataframe(topic=input_topic)
 
-    # Repartition by colour so each colour has its own window state.
+    # Loop 1: count every raw message and track per-colour totals (side-effect).
+    sdf = sdf.apply(_track_message)
+
+    # Loop 2: repartition by colour and compute per-second tumbling window counts.
     sdf = sdf.group_by("colour")
 
     # group_by repartitions via an internal Kafka topic and stamps messages with
@@ -55,7 +107,7 @@ def main():
             initializer=lambda row: {"colour": row["colour"], "count": 1},
             reducer=lambda agg, _: {**agg, "count": agg["count"] + 1},
         )
-        .final()  # emits on every update; guarantees output even if the window never closes
+        .final()
     )
 
     def log_window(result):

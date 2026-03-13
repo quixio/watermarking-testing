@@ -39,12 +39,14 @@ class VehicleTrafficGenerator(Source):
 
     def run(self):
         self._plate_counter = 0
+        total_sent = 0
         ts_start = datetime.now(timezone.utc)
         base_second = ts_start.replace(microsecond=0)
 
         for second_offset in range(60):
             second_start = base_second + timedelta(seconds=second_offset)
             second_start_ms = int(second_start.timestamp() * 1000)
+            second_sent = 0
 
             for colour in COLOURS:
                 for _ in range(10):
@@ -64,13 +66,16 @@ class VehicleTrafficGenerator(Source):
 
                     msg = self.serialize(key=brand, value=value)
                     self.produce(key=msg.key, value=msg.value)
+                    second_sent += 1
+                    total_sent += 1
 
             if not self.running:
+                print(f"Stopped early. Total messages sent: {total_sent}")
                 return
 
-            print(f"Produced second {second_offset + 1}/60 ({second_start.isoformat()})")
+            print(f"Produced second {second_offset + 1}/60 ({second_start.isoformat()}) — messages this second: {second_sent}, total sent: {total_sent}")
 
-        print("Finished producing 12,000 vehicle messages.")
+        print(f"Finished producing vehicle messages. Total sent: {total_sent}")
 
 
 def main():
