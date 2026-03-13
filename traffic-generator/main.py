@@ -3,7 +3,7 @@ from quixstreams.sources import Source
 
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,9 +25,9 @@ COLOURS = [
 
 class VehicleTrafficGenerator(Source):
     """
-    Generates 60 seconds of vehicle traffic data.
-    Each discrete second has exactly 10 vehicles per colour (200 vehicles/sec).
-    Total: 20 colours × 10 vehicles × 60 seconds = 12,000 messages.
+    Continuously generates vehicle traffic data in an infinite loop.
+    Each discrete second has exactly 10,000 vehicles per colour (200,000 vehicles/sec).
+    Runs until stopped.
     """
 
     def _generate_plate(self):
@@ -40,16 +40,15 @@ class VehicleTrafficGenerator(Source):
     def run(self):
         self._plate_counter = 0
         total_sent = 0
-        ts_start = datetime.now(timezone.utc)
-        base_second = ts_start.replace(microsecond=0)
+        second_offset = 0
 
-        for second_offset in range(60):
-            second_start = base_second + timedelta(seconds=second_offset)
+        while self.running:
+            second_start = datetime.now(timezone.utc).replace(microsecond=0)
             second_start_ms = int(second_start.timestamp() * 1000)
             second_sent = 0
 
             for colour in COLOURS:
-                for _ in range(10):
+                for _ in range(10_000):
                     brand = random.choice(BRANDS)
                     plate = self._generate_plate()
                     passengers = random.randint(1, 4)
@@ -60,7 +59,6 @@ class VehicleTrafficGenerator(Source):
                         "brand": brand,
                         "colour": colour,
                         "passengers": passengers,
-                        "ts_start": ts_start.isoformat(),
                         "ts": ts_ms,
                     }
 
@@ -69,13 +67,10 @@ class VehicleTrafficGenerator(Source):
                     second_sent += 1
                     total_sent += 1
 
-            if not self.running:
-                print(f"Stopped early. Total messages sent: {total_sent}")
-                return
+            second_offset += 1
+            print(f"Produced second {second_offset} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}")
 
-            print(f"Produced second {second_offset + 1}/60 ({second_start.isoformat()}) — messages this second: {second_sent}, total sent: {total_sent}")
-
-        print(f"Finished producing vehicle messages. Total sent: {total_sent}")
+        print(f"Stopped. Total messages sent: {total_sent:,}")
 
 
 def main():
