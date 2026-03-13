@@ -46,6 +46,7 @@ def _inactivity_monitor():
                 for colour, count in sorted(counts.items()):
                     logger.info("  %-12s : %d", colour, count)
                 logger.info("  %-12s : %d", "GRAND TOTAL", sum(counts.values()))
+                logger.info("  %-12s : %d", "UNIQUE COLOURS", len(counts))
             last_reported_at = lmt
 
 
