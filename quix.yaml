@@ -68,3 +68,7 @@ topics:
     configuration:
       partitions: 4
   - name: flat-colours
+  - name: watermarks__colour_counter_v1--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
