@@ -50,7 +50,7 @@ deployments:
         inputType: InputTopic
         description: Name of the Kafka input topic to consume from
         required: true
-        value: flat-colours
+        value: colours
       - name: TABLE_NAME
         inputType: FreeText
         description: Table name for data organization and registration, else defaults to topic name
