@@ -60,7 +60,7 @@ class VehicleTrafficGenerator(Source):
                         "brand": brand,
                         "colour": colour,
                         "passengers": passengers,
-                        "run_id": run_id
+                        "run_id": run_id,
                         "ts": ts_ms,
                     }
 
