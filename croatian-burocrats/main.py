@@ -20,94 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Shared state for independent counters ---
-_lock = threading.Lock()
-_total_received = 0
-_colour_counts = defaultdict(int)
-_last_message_time = 0.0
-
-# --- Shared state for output counters (windowed results sent to Normalization) ---
-_out_lock = threading.Lock()
-_out_colour_counts = defaultdict(int)
-_out_total_sent = 0
-_last_out_time = 0.0
-
-
-def _inactivity_monitor():
-    """
-    Background thread: prints total message count and per-colour totals
-    once when no new message has arrived for 15 seconds.
-    """
-    last_reported_at = 0.0
-    while True:
-        time.sleep(1)
-        with _lock:
-            lmt = _last_message_time
-            total = _total_received
-            counts = dict(_colour_counts)
-
-        if lmt > 0 and (time.time() - lmt) >= 15 and lmt != last_reported_at:
-            logger.info("No new messages for 15s — total messages received: %d", total)
-            if counts:
-                logger.info("Per-colour totals (cumulative):")
-                for colour, count in sorted(counts.items()):
-                    logger.info("  %-12s : %d", colour, count)
-                logger.info("  %-12s : %d", "GRAND TOTAL", sum(counts.values()))
-                logger.info("  %-12s : %d", "UNIQUE COLOURS", len(counts))
-            last_reported_at = lmt
-
-
-def _out_inactivity_monitor():
-    """
-    Background thread: prints windowed colour totals sent to Normalization
-    once when no new output message has been produced for 20 seconds.
-    Uses 20s (vs 15s for the input monitor) so both never log at the same time.
-    """
-    last_reported_at = 0.0
-    while True:
-        time.sleep(1)
-        with _out_lock:
-            lmt = _last_out_time
-            total = _out_total_sent
-            counts = dict(_out_colour_counts)
-
-        if lmt > 0 and (time.time() - lmt) >= 20 and lmt != last_reported_at:
-            logger.info("No new output for 20s — window messages sent to Normalization: %d", total)
-            if counts:
-                logger.info("Per-colour vehicle counts sent (summed from windows):")
-                for colour, count in sorted(counts.items()):
-                    logger.info("  %-12s : %d", colour, count)
-                logger.info("  %-12s : %d", "GRAND TOTAL", sum(counts.values()))
-            last_reported_at = lmt
-
-
-def _track_output(result):
-    """Track windowed results being sent to the output topic.
-    Counts window messages sent, and accumulates the vehicle count from each window."""
-    global _out_total_sent, _last_out_time
-    colour = result["value"].get("colour")
-    vehicle_count = result["value"].get("count", 1)
-    with _out_lock:
-        _out_total_sent += 1
-        _last_out_time = time.time()
-        if colour:
-            _out_colour_counts[colour] += vehicle_count
-    return result
-
-
-def _track_message(row):
-    """
-    Loop 1 — counts every raw message received and tracks per-colour totals.
-    Runs before any repartitioning so it sees all messages exactly once.
-    """
-    global _total_received, _last_message_time
-    with _lock:
-        _total_received += 1
-        _last_message_time = time.time()
-        if "colour" in row:
-            _colour_counts[row["colour"]] += 1
-    return row
-
 
 def main():
     # Use the message's own "ts" field (epoch ms) as the event timestamp.
@@ -129,10 +41,6 @@ def main():
     )
 
     output_topic = app.topic(name="colours")
-
-    # Start both inactivity monitors in the background.
-    #threading.Thread(target=_inactivity_monitor, daemon=True).start()
-    #threading.Thread(target=_out_inactivity_monitor, daemon=True).start()
 
     sdf = app.dataframe(topic=input_topic)
 
@@ -156,16 +64,7 @@ def main():
         .final()
     )
 
-    def log_window(result):
-        colour = result["value"]["colour"]
-        count  = result["value"]["count"]
-        start  = result["start"]
-        end    = result["end"]
-        logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
-        return result
-
     sdf.print_table()
-    #sdf.apply(log_window).apply(_track_output)
     
     sdf.to_topic(output_topic)
 
