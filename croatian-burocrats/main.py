@@ -30,7 +30,7 @@ def main():
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="colour_counter_v1.2",
+        consumer_group="burocrats_watermarking_" + os.environ["consumer_group"],
         auto_create_topics=True,
         auto_offset_reset="earliest",
     )
