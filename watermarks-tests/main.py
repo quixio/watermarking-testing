@@ -55,11 +55,13 @@ def _(mo):
       abs(max(watermarking.count)-min(watermarking.count)) as "watermaking", 
       abs(max(nowatermarking.count)-min(nowatermarking.count)) as "nowatermarking", 
 
-    FROM carcoloursnomwv2 as nowatermarking
-    LEFT OUTER JOIN carcoloursv2 as watermarking ON watermarking.run_id == nowatermarking.run_id
+    FROM carcoloursnomwv3 as nowatermarking
+    LEFT OUTER JOIN carcoloursv3 as watermarking ON watermarking.run_id == nowatermarking.run_id
     GROUP BY watermarking.run_id
     ORDER BY run_id DESC
     LIMIT 10
+
+
     """.strip()
 
     sql_form = mo.ui.code_editor(
