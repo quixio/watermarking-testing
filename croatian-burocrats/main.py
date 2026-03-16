@@ -30,7 +30,7 @@ def main():
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="colour_counter_v1.2",
+        consumer_group="colour_counter_v1.1",
         auto_create_topics=True,
         auto_offset_reset="earliest",
     )
@@ -40,7 +40,7 @@ def main():
         timestamp_extractor=ts_extractor,
     )
 
-    output_topic = app.topic(name="colours")
+    output_topic = app.topic(name=os.environ["output"])
 
     sdf = app.dataframe(topic=input_topic)
 
