@@ -12,7 +12,7 @@ deployments:
     deploymentType: Service
     resources:
       cpu: 2000
-      memory: 6500
+      memory: 3500
       replicas: 1
     variables:
       - name: output
