@@ -182,3 +182,5 @@ topics:
       partitions: 1
       cleanupPolicy: Compact
   - name: coloursNoWM
+    configuration:
+      partitions: 4
