@@ -270,7 +270,7 @@ deployments:
       - name: ANTHROPIC_API_KEY
         inputType: Secret
         description: Token generated from https://platform.claude.com/settings/keys.
-        secretKey: pat
+        secretKey: CLAUDE_TOKEN
     plugin:
       embeddedView:
         enabled: true
@@ -279,6 +279,7 @@ deployments:
       sidebarItem:
         show: true
         icon: note_alt
+        order: 0
         badge: BETA
 
 # This section describes the Topics of the data pipeline
