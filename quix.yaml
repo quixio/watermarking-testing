@@ -43,7 +43,7 @@ deployments:
         value: colours
       - name: consumer_group
         inputType: FreeText
-        value: v1
+        value: {{consumer_group}}
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest
@@ -279,10 +279,6 @@ topics:
       partitions: 1
       cleanupPolicy: Compact
   - name: watermarks__colour_counter_v1.1--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
-  - name: watermarks__burocrats_watermarking_v1--watermarks
     configuration:
       partitions: 1
       cleanupPolicy: Compact
