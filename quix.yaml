@@ -281,3 +281,5 @@ topics:
       cleanupPolicy: Compact
   - name: flat-coloursNoWM
   - name: colours
+    configuration:
+      partitions: 4
