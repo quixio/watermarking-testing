@@ -41,6 +41,9 @@ deployments:
         inputType: OutputTopic
         description: Name of the output topic to write to.
         value: colours
+      - name: consumer_group
+        inputType: FreeText
+        value: v1
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest
