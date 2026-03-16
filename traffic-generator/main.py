@@ -3,7 +3,7 @@ from quixstreams.sources import Source
 
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,9 +25,9 @@ COLOURS = [
 
 class VehicleTrafficGenerator(Source):
     """
-    Generates 1 hour of vehicle traffic data.
-    Each discrete minute has exactly 10 vehicles per colour (200 vehicles/min).
-    Total: 20 colours × 10 vehicles × 60 minutes = 12,000 messages.
+    Continuously generates vehicle traffic data in an infinite loop.
+    Each discrete second has exactly 10,000 vehicles per colour (200,000 vehicles/sec).
+    Runs until stopped.
     """
 
     def _generate_plate(self):
@@ -39,38 +39,38 @@ class VehicleTrafficGenerator(Source):
 
     def run(self):
         self._plate_counter = 0
-        ts_start = datetime.now(timezone.utc)
-        base_minute = ts_start.replace(second=0, microsecond=0)
+        total_sent = 0
+        second_offset = 0
 
-        for minute_offset in range(60):
-            minute_start = base_minute + timedelta(minutes=minute_offset)
-            minute_start_ms = int(minute_start.timestamp() * 1000)
+        while self.running:
+            second_start = datetime.now(timezone.utc).replace(microsecond=0)
+            second_start_ms = int(second_start.timestamp() * 1000)
+            second_sent = 0
 
             for colour in COLOURS:
-                for _ in range(10):
+                for _ in range(10_000):
                     brand = random.choice(BRANDS)
                     plate = self._generate_plate()
                     passengers = random.randint(1, 4)
-                    ts_ms = minute_start_ms + random.randint(0, 59_999)
+                    ts_ms = second_start_ms + random.randint(0, 999)
 
                     value = {
                         "plate": plate,
                         "brand": brand,
                         "colour": colour,
                         "passengers": passengers,
-                        "ts_start": ts_start.isoformat(),
                         "ts": ts_ms,
                     }
 
                     msg = self.serialize(key=brand, value=value)
                     self.produce(key=msg.key, value=msg.value)
+                    second_sent += 1
+                    total_sent += 1
 
-            if not self.running:
-                return
+            second_offset += 1
+            print(f"Produced second {second_offset} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}")
 
-            print(f"Produced minute {minute_offset + 1}/60 ({minute_start.isoformat()})")
-
-        print("Finished producing 12,000 vehicle messages.")
+        print(f"Stopped. Total messages sent: {total_sent:,}")
 
 
 def main():
