@@ -3,8 +3,9 @@ language: python
 variables:
   - name: input
     inputType: InputTopic
+    multiline: false
     description: Name of the Kafka input topic to consume from
-    defaultValue: flat-colours
+    defaultValue: flat-coloursNoWM
     required: true
   - name: TABLE_NAME
     inputType: FreeText
