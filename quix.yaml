@@ -267,7 +267,6 @@ topics:
   - name: coloursNoWM
     configuration:
       partitions: 4
-  - name: flat-coloursNoWM
   - name: colours
     configuration:
       partitions: 4
