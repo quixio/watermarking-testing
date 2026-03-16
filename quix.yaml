@@ -287,7 +287,6 @@ topics:
   - name: colours
     configuration:
       partitions: 4
-  - name: flat-coloursNoWM
   - name: watermarks__colour_counter_v1.2--watermarks
     configuration:
       partitions: 1
