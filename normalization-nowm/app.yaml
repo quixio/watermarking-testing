@@ -5,7 +5,7 @@ variables:
     inputType: InputTopic
     multiline: false
     description: Name of the input topic to listen to.
-    defaultValue: colours
+    defaultValue: coloursNoWM
   - name: output
     inputType: OutputTopic
     multiline: false
