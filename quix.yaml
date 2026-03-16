@@ -37,6 +37,23 @@ deployments:
         inputType: OutputTopic
         description: Name of the output topic to write to.
         value: colours
+  - name: Starter Transformation
+    application: starter-transformation
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: input
+        inputType: InputTopic
+        description: Name of the input topic to listen to.
+        value: colours
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write to.
+        value: flat-colours
 
 # This section describes the Topics of the data pipeline
 topics:
