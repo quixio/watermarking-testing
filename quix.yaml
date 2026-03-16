@@ -137,6 +137,9 @@ deployments:
         inputType: OutputTopic
         description: Name of the output topic to write to.
         value: coloursNoWM
+      - name: consumer_group
+        inputType: FreeText
+        value: v1
   - name: CarColoursDataLakeNoWM
     application: carcoloursdatalakenowm
     version: latest
