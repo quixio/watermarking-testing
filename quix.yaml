@@ -264,9 +264,6 @@ topics:
       replicationFactor: 2
       retentionInMinutes: -1
       retentionInBytes: 52428800
-  - name: colours
-    configuration:
-      partitions: 4
   - name: watermarks__colour_counter_v1--watermarks
     configuration:
       partitions: 1
