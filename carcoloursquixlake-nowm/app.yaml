@@ -8,8 +8,9 @@ variables:
     required: true
   - name: TABLE_NAME
     inputType: FreeText
+    multiline: false
     description: Table name for data organization and registration, else defaults to topic name
-    defaultValue: carcolours
+    defaultValue: carcolours-nowm
   - name: HIVE_COLUMNS
     inputType: FreeText
     description: Comma-separated list of columns for Hive partitioning. Include year/month/day/hour to extract from TIMESTAMP_COLUMN (e.g., location,year,month,day,sensor_type)
