@@ -44,9 +44,6 @@ def main():
 
     sdf = app.dataframe(topic=input_topic)
 
-    # Loop 1: count every raw message and track per-colour totals (side-effect).
-    sdf = sdf.apply(_track_message)
-
     sdf = sdf[sdf.contains("run_id")]
 
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
