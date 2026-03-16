@@ -48,12 +48,11 @@ def _(QuixLakeClient, os):
 def _(mo):
     # TODO: Modify the SQL query for your data
     default_query = """
-    SELECT
-    Timestamp as time,
-    value
-    FROM your_table
-    ORDER BY Timestamp
-    LIMIT 1000
+    SELECT run_id, min(count), mean(count), max(count)
+    FROM carcoloursv2
+    WHERE run_id = 'run_2026-03-16 12:15:03.055043+00:00'
+    GROUP BY run_id
+    LIMIT 100
     """.strip()
 
     sql_form = mo.ui.code_editor(
@@ -61,7 +60,7 @@ def _(mo):
         language="sql",
         label="SQL query",
         min_height=150,
-    ).form(submit_button_label="Run SQL")
+    )
 
     sql_form
     return (sql_form,)
@@ -75,15 +74,58 @@ def _(client, sql_form):
 
 
 @app.cell
-def _(df, mo):
-    import plotly.express as px
-    fig = px.line(
-        df,
-        x="time",
-        y="value",
-        title="Waveform",
+def _():
+    import altair as alt
+
+    return (alt,)
+
+
+@app.cell
+def _(alt, df):
+    # Create a layered chart with range and mean line
+    zoom = alt.selection_interval(bind='scales', name='zoom_selection')
+
+    base = alt.Chart(df).add_params(zoom)
+
+    # Background range area
+    range_area = base.mark_area(
+        opacity=0.3,
+        color='lightblue'
+    ).encode(
+        x=alt.X('run_id:T', title='Run ID'),
+        y=alt.Y('min(count):Q', title='Count'),
+        y2=alt.Y2('max(count):Q'),
+        tooltip=['run_id:T', 'min(count):Q', 'max(count):Q']
     )
-    mo.ui.plotly(fig)
+
+    # Mean line
+    mean_line = base.mark_line(
+        color='red',
+        strokeWidth=3
+    ).encode(
+        x='run_id:T',
+        y='mean(count):Q',
+        tooltip=['run_id:T', 'mean(count):Q']
+    )
+
+    # Mean points for better visibility
+    mean_points = base.mark_circle(
+        color='red',
+        size=100
+    ).encode(
+        x='run_id:T',
+        y='mean(count):Q',
+        tooltip=['run_id:T', 'mean(count):Q', 'min(count):Q', 'max(count):Q']
+    )
+
+    # Combine layers
+    chart = (range_area + mean_line + mean_points).properties(
+        title='Count Statistics by Run ID',
+        width=600,
+        height=400
+    )
+
+    chart
     return
 
 
