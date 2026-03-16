@@ -50,12 +50,13 @@ def _(mo):
     default_query = """
     SELECT 
       watermarking.run_id,
-      count(watermarking.count) as "count",
+      count(watermarking.count) as "watermarking count",
+      count(nowatermarking.count) as "nowatermarking count",
       abs(max(watermarking.count)-min(watermarking.count)) as "watermaking", 
       abs(max(nowatermarking.count)-min(nowatermarking.count)) as "nowatermarking", 
 
-    FROM carcoloursv2 as watermarking
-    JOIN carcoloursnomwv2 as nowatermarking ON watermarking.run_id == nowatermarking.run_id
+    FROM carcoloursnomwv2 as nowatermarking
+    LEFT OUTER JOIN carcoloursv2 as watermarking ON watermarking.run_id == nowatermarking.run_id
     GROUP BY watermarking.run_id
     ORDER BY run_id DESC
     LIMIT 10
@@ -89,7 +90,7 @@ def _():
 @app.cell
 def _(alt, df):
     # Create base chart
-    base_chart = alt.Chart(df).add_selection(
+    _base_chart = alt.Chart(df).add_selection(
         alt.selection_interval()
     ).properties(
         width=700,
@@ -98,7 +99,7 @@ def _(alt, df):
     )
 
     # Left axis - watermarking metrics starting from 0
-    left_axis_chart = base_chart.transform_fold(
+    _left_axis_chart = _base_chart.transform_fold(
         ['watermaking', 'nowatermarking'],
         as_=['metric_type', 'difference_value']
     ).mark_line(
@@ -120,24 +121,37 @@ def _(alt, df):
         tooltip=['run_id:O', 'metric_type:N', 'difference_value:Q']
     )
 
-    # Right axis - count
-    right_axis_chart = base_chart.mark_line(
+    # Right axis - watermarking count and nowatermarking count
+    _right_axis_chart = _base_chart.transform_fold(
+        ['watermarking count', 'nowatermarking count'],
+        as_=['count_type', 'count_value']
+    ).mark_line(
         point=True,
         strokeWidth=3,
-        color='red',
         strokeDash=[5, 5]
     ).encode(
         x=alt.X('run_id:O'),
-        y=alt.Y('count:Q', 
+        y=alt.Y('count_value:Q', 
                 title='Count (Right Axis)',
-                scale=alt.Scale(domain=[df['count'].min() * 0.95, df['count'].max() * 1.05])),
-        tooltip=['run_id:O', 'count:Q']
+                scale=alt.Scale(
+                    domain=[
+                        df[['watermarking count', 'nowatermarking count']].min().min() * 0.95,
+                        df[['watermarking count', 'nowatermarking count']].max().max() * 1.05
+                    ]
+                )),
+        color=alt.Color('count_type:N', 
+                       title='Metric Type',
+                       scale=alt.Scale(
+                           domain=['watermarking count', 'nowatermarking count'],
+                           range=['#d62728', '#2ca02c']
+                       )),
+        tooltip=['run_id:O', 'count_type:N', 'count_value:Q']
     )
 
     # Layer the charts with independent y-scales
     chart = alt.layer(
-        left_axis_chart,
-        right_axis_chart
+        _left_axis_chart,
+        _right_axis_chart
     ).resolve_scale(
         y='independent'
     ).interactive()
