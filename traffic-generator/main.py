@@ -49,7 +49,7 @@ class VehicleTrafficGenerator(Source):
             second_sent = 0
 
             for colour in COLOURS:
-                for _ in range(10_000):
+                for _ in range(100):
                     brand = random.choice(BRANDS)
                     plate = self._generate_plate()
                     passengers = random.randint(1, 4)
