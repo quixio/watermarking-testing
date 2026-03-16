@@ -10,7 +10,7 @@ variables:
     inputType: OutputTopic
     multiline: false
     description: Name of the output topic to write to.
-    defaultValue: flat-colours
+    defaultValue: flat-coloursNoWM
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
