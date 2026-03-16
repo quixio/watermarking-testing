@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 from collections import defaultdict
+from quixstreams.dataframe.windows import Count, First
 
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
@@ -117,7 +118,7 @@ def main():
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="colour_counter_v1",
+        consumer_group="colour_counter_v1_dev",
         auto_create_topics=True,
         auto_offset_reset="earliest",
     )
@@ -138,6 +139,8 @@ def main():
     # Loop 1: count every raw message and track per-colour totals (side-effect).
     sdf = sdf.apply(_track_message)
 
+    sdf = sdf[sdf.contains("run_id")]
+
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
     sdf = sdf.group_by("colour")
 
@@ -149,10 +152,7 @@ def main():
     sdf = (
         sdf
         .tumbling_window(duration_ms=timedelta(seconds=1), grace_ms=timedelta(seconds=1))
-        .reduce(
-            initializer=lambda row: {"colour": row["colour"], "count": 1},
-            reducer=lambda agg, _: {**agg, "count": agg["count"] + 1},
-        )
+        .agg("count"=Count(), "run_id": First("run_id"))
         .final()
     )
 
@@ -164,7 +164,9 @@ def main():
         logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
-    sdf.apply(log_window).apply(_track_output).to_topic(output_topic)
+    sdf.apply(log_window).apply(_track_output)
+    
+    #sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
