@@ -50,18 +50,15 @@ def _(mo):
     default_query = """
     SELECT 
       watermarking.run_id,
+      count(watermarking.count) as "count",
+      abs(max(watermarking.count)-min(watermarking.count)) as "watermaking", 
+      abs(max(nowatermarking.count)-min(nowatermarking.count)) as "nowatermarking", 
 
-      min(watermarking.count) as "watermaking-min", 
-      mean(watermarking.count) as "watermaking-mean", 
-      max(watermarking.count) as "watermaking-max",
-
-      min(nowatermarking.count) as "nowatermarking-min", 
-      mean(nowatermarking.count) as "nowatermarking-mean", 
-      max(nowatermarking.count) as "nowatermarking-max",
-  
     FROM carcoloursv2 as watermarking
     JOIN carcoloursnomwv2 as nowatermarking ON watermarking.run_id == nowatermarking.run_id
     GROUP BY watermarking.run_id
+    ORDER BY run_id DESC
+    LIMIT 10
     """.strip()
 
     sql_form = mo.ui.code_editor(
@@ -91,79 +88,61 @@ def _():
 
 @app.cell
 def _(alt, df):
-    # Create watermarking chart with updated colors
-    _zoom1 = alt.selection_interval(bind='scales', name='zoom_selection1')
-
-    _watermarking_chart = alt.Chart(df).mark_area(
-        opacity=0.3,
-        color='lightblue'
-    ).encode(
-        x=alt.X('run_id:N', title='Run ID', axis=alt.Axis(labelAngle=-45, labelLimit=200)),
-        y=alt.Y('watermaking-min:Q', title='Count'),
-        y2=alt.Y2('watermaking-max:Q'),
-        tooltip=['run_id:N', 'watermaking-min:Q', 'watermaking-max:Q', 'watermaking-mean:Q']
-    ).add_params(
-        _zoom1
+    # Create base chart
+    base_chart = alt.Chart(df).add_selection(
+        alt.selection_interval()
     ).properties(
-        title='Watermarking Count Ranges by Run ID',
-        width=800,
-        height=350
+        width=700,
+        height=400,
+        title='Watermarking Metrics and Count by Run ID'
     )
 
-    # Add mean line with high contrast
-    _watermarking_mean_line = alt.Chart(df).mark_line(
-        color='navy',
+    # Left axis - watermarking metrics starting from 0
+    left_axis_chart = base_chart.transform_fold(
+        ['watermaking', 'nowatermarking'],
+        as_=['metric_type', 'difference_value']
+    ).mark_line(
+        point=True,
+        strokeWidth=3
+    ).encode(
+        x=alt.X('run_id:O', 
+                title='Run ID',
+                axis=alt.Axis(labelAngle=45)),
+        y=alt.Y('difference_value:Q', 
+                title='Count Difference (Left Axis)',
+                scale=alt.Scale(domain=[0, df[['watermaking', 'nowatermarking']].max().max() * 1.1], zero=True)),
+        color=alt.Color('metric_type:N', 
+                       title='Metric Type',
+                       scale=alt.Scale(
+                           domain=['watermaking', 'nowatermarking'],
+                           range=['#1f77b4', '#ff7f0e']
+                       )),
+        tooltip=['run_id:O', 'metric_type:N', 'difference_value:Q']
+    )
+
+    # Right axis - count
+    right_axis_chart = base_chart.mark_line(
+        point=True,
         strokeWidth=3,
+        color='red',
         strokeDash=[5, 5]
     ).encode(
-        x='run_id:N',
-        y='watermaking-mean:Q',
-        tooltip=['run_id:N', 'watermaking-mean:Q']
-    ).add_params(
-        _zoom1
+        x=alt.X('run_id:O'),
+        y=alt.Y('count:Q', 
+                title='Count (Right Axis)',
+                scale=alt.Scale(domain=[df['count'].min() * 0.95, df['count'].max() * 1.05])),
+        tooltip=['run_id:O', 'count:Q']
     )
 
-    watermarking_chart = (_watermarking_chart + _watermarking_mean_line)
-    watermarking_chart
-    return
+    # Layer the charts with independent y-scales
+    chart = alt.layer(
+        left_axis_chart,
+        right_axis_chart
+    ).resolve_scale(
+        y='independent'
+    ).interactive()
 
-
-@app.cell
-def _(alt, df):
-    # Create nowatermarking chart with updated colors
-    _zoom2 = alt.selection_interval(bind='scales', name='zoom_selection2')
-
-    _nowatermarking_chart = alt.Chart(df).mark_area(
-        opacity=0.3,
-        color='wheat'
-    ).encode(
-        x=alt.X('run_id:N', title='Run ID', axis=alt.Axis(labelAngle=-45, labelLimit=200)),
-        y=alt.Y('nowatermarking-min:Q', title='Count'),
-        y2=alt.Y2('nowatermarking-max:Q'),
-        tooltip=['run_id:N', 'nowatermarking-min:Q', 'nowatermarking-max:Q', 'nowatermarking-mean:Q']
-    ).add_params(
-        _zoom2
-    ).properties(
-        title='No-Watermarking Count Ranges by Run ID',
-        width=800,
-        height=350
-    )
-
-    # Add mean line with high contrast
-    _nowatermarking_mean_line = alt.Chart(df).mark_line(
-        color='darkred',
-        strokeWidth=3,
-        strokeDash=[5, 5]
-    ).encode(
-        x='run_id:N',
-        y='nowatermarking-mean:Q',
-        tooltip=['run_id:N', 'nowatermarking-mean:Q']
-    ).add_params(
-        _zoom2
-    )
-
-    nowatermarking_chart = (_nowatermarking_chart + _nowatermarking_mean_line)
-    nowatermarking_chart
+    chart
     return
 
 
