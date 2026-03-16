@@ -163,7 +163,7 @@ deployments:
       - name: output
         inputType: OutputTopic
         description: Name of the output topic to write to.
-        value: ''
+        value: flat-coloursNoWM
 
 # This section describes the Topics of the data pipeline
 topics:
