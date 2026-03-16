@@ -13,6 +13,11 @@ variables:
     inputType: Secret
     description: Token generated from https://platform.claude.com/settings/keys.
     defaultValue: pat
+  - name: QUIX_LAKE_TOKEN
+    inputType: Secret
+    multiline: false
+    defaultValue: pat
+    required: true
 dockerfile: dockerfile
 defaultFile: dockerfile
 libraryItemId: marimo
