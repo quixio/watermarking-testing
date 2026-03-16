@@ -130,6 +130,23 @@ deployments:
         value: 10
     blobStorage:
       bind: true
+  - name: Croatian Burocrats NoWM
+    application: croatian-burocrats-nowm
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: input
+        inputType: InputTopic
+        description: Name of the input topic to listen to.
+        value: highway-2
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write to.
+        value: coloursNoWM
 
 # This section describes the Topics of the data pipeline
 topics:
