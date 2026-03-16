@@ -41,6 +41,7 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
+        run_id = "run_" + str(datetime.now(timezone.utc))
 
         while self.running:
             second_start = datetime.now(timezone.utc).replace(microsecond=0)
@@ -59,6 +60,7 @@ class VehicleTrafficGenerator(Source):
                         "brand": brand,
                         "colour": colour,
                         "passengers": passengers,
+                        "run_id": run_id
                         "ts": ts_ms,
                     }
 
