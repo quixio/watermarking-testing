@@ -1,0 +1,42 @@
+Write a Python Quix Streams transformation application that consumes vehicle traffic messages from a Kafka topic, counts vehicles per colour using tumbling windows, and publishes the results to an output topic.
+
+Requirements:
+- Use `quixstreams` Application and StreamingDataFrame
+- Use `python-dotenv` to load environment variables from a .env file
+- Use `logging` with basicConfig level INFO, format: "%(asctime)s [colour-counter] %(message)s"
+- Read the input topic name from an environment variable called `input`
+- Hard-code the output topic name as `"colours"`
+
+In `main()`:
+
+1. Define a `ts_extractor(value, _headers, _timestamp, _timestamp_type) -> int` function that returns `value["ts"]` (epoch ms). This drives event-time windowing from the message payload rather than Kafka broker time.
+
+2. Create an `Application` with:
+   - `consumer_group="colour_counter_v1"`
+   - `auto_create_topics=True`
+   - `auto_offset_reset="earliest"`
+
+3. Create the input topic with the `ts_extractor` as `timestamp_extractor`.
+
+4. Create the output topic named `"colours"`.
+
+5. Build a StreamingDataFrame pipeline:
+   - Start from the input topic
+   - Repartition by `"colour"` using `.group_by("colour")` so each colour has isolated window state
+   - Re-apply the event timestamp from `row["ts"]` using `.set_timestamp(lambda row, *_: row["ts"])` (group_by stamps messages with broker time, losing original event time)
+   - Apply a `.tumbling_window(duration_ms=timedelta(seconds=1), grace_ms=timedelta(seconds=1))`
+   - Use `.reduce()` with:
+     - `initializer`: `lambda row: {"colour": row["colour"], "count": 1}`
+     - `reducer`: `lambda agg, _: {**agg, "count": agg["count"] + 1}`
+   - Call `.final()` to emit once the window closes (guarantees output even if window never closes naturally)
+
+6. Define a `log_window(result)` function that:
+   - Extracts colour, count, start, end from the result dict (`result["value"]["colour"]`, etc.)
+   - Logs: `"colour=%-12s  count=%4d  window=[%d – %d]"` using logger.info
+   - Returns result
+
+7. Chain `.apply(log_window).to_topic(output_topic)`
+
+8. Call `app.run()`
+
+Guard with `if __name__ == "__main__": main()`
