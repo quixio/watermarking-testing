@@ -11,6 +11,16 @@ variables:
     description: Number of messages to generate per (brand, colour) pair each second
     defaultValue: 1
     required: false
+  - name: RUN_ID_MIN_SECONDS
+    inputType: FreeText
+    description: Minimum number of seconds before rotating run_id
+    defaultValue: 20
+    required: false
+  - name: RUN_ID_MAX_SECONDS
+    inputType: FreeText
+    description: Maximum number of seconds before rotating run_id
+    defaultValue: 200
+    required: false
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py

@@ -24,6 +24,14 @@ deployments:
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
         value: 1
+      - name: RUN_ID_MIN_SECONDS
+        inputType: FreeText
+        description: Minimum number of seconds before rotating run_id
+        value: 20
+      - name: RUN_ID_MAX_SECONDS
+        inputType: FreeText
+        description: Maximum number of seconds before rotating run_id
+        value: 200
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest

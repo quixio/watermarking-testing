@@ -25,6 +25,8 @@ COLOURS = [
 
 
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
+RUN_ID_MIN_SECONDS = int(os.environ.get("RUN_ID_MIN_SECONDS", "20"))
+RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
 
 
 class VehicleTrafficGenerator(Source):
@@ -49,7 +51,7 @@ class VehicleTrafficGenerator(Source):
         total_sent = 0
         second_offset = 0
         run_id = self._new_run_id()
-        run_id_duration = random.randint(2, 20)   # seconds before first rotation
+        run_id_duration = random.randint(RUN_ID_MIN_SECONDS, RUN_ID_MAX_SECONDS)   # seconds before first rotation
         run_id_seconds_used = 0
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
@@ -93,7 +95,7 @@ class VehicleTrafficGenerator(Source):
             # Rotate run_id only after a full second-tick (all brands×colours complete)
             if run_id_seconds_used >= run_id_duration:
                 run_id = self._new_run_id()
-                run_id_duration = random.randint(2, 20)
+                run_id_duration = random.randint(RUN_ID_MIN_SECONDS, RUN_ID_MAX_SECONDS)
                 run_id_seconds_used = 0
                 print(f"run_id rotated → {run_id}, next rotation in {run_id_duration}s")
 
