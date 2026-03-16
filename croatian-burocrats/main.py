@@ -118,7 +118,7 @@ def main():
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="colour_counter_v1_dev",
+        consumer_group="colour_counter_v1.1",
         auto_create_topics=True,
         auto_offset_reset="earliest",
     )
@@ -131,8 +131,8 @@ def main():
     output_topic = app.topic(name="colours")
 
     # Start both inactivity monitors in the background.
-    threading.Thread(target=_inactivity_monitor, daemon=True).start()
-    threading.Thread(target=_out_inactivity_monitor, daemon=True).start()
+    #threading.Thread(target=_inactivity_monitor, daemon=True).start()
+    #threading.Thread(target=_out_inactivity_monitor, daemon=True).start()
 
     sdf = app.dataframe(topic=input_topic)
 
@@ -164,9 +164,10 @@ def main():
         logger.info("colour=%-12s  count=%4d  window=[%d – %d]", colour, count, start, end)
         return result
 
-    sdf.apply(log_window).apply(_track_output)
+    sdf.print_table()
+    #sdf.apply(log_window).apply(_track_output)
     
-    #sdf.to_topic(output_topic)
+    sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
     app.run()
