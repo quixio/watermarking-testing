@@ -16,3 +16,4 @@ fastapi
 uvicorn
 pydantic_ai
 anthropic
+altair
