@@ -40,7 +40,7 @@ def main():
         timestamp_extractor=ts_extractor,
     )
 
-    output_topic = app.topic(name="colours")
+    output_topic = app.topic(name=os.environ["output"])
 
     sdf = app.dataframe(topic=input_topic)
 
