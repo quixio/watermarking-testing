@@ -245,7 +245,7 @@ deployments:
     version: latest
     deploymentType: Service
     resources:
-      cpu: 500
+      cpu: 1000
       memory: 2000
       replicas: 1
     publicAccess:
@@ -271,6 +271,10 @@ deployments:
         inputType: Secret
         description: Token generated from https://platform.claude.com/settings/keys.
         secretKey: CLAUDE_TOKEN
+      - name: QUIX_LAKE_TOKEN
+        inputType: Secret
+        required: true
+        secretKey: pat
     plugin:
       embeddedView:
         enabled: true
