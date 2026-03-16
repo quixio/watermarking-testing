@@ -139,7 +139,7 @@ deployments:
         value: coloursNoWM
       - name: consumer_group
         inputType: FreeText
-        value: v1
+        value: {{consumer_group}}
   - name: CarColoursDataLakeNoWM
     application: carcoloursdatalakenowm
     version: latest
