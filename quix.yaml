@@ -147,6 +147,23 @@ deployments:
         inputType: OutputTopic
         description: Name of the output topic to write to.
         value: coloursNoWM
+  - name: Normalization NoWM
+    application: normalization-nowm
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: input
+        inputType: InputTopic
+        description: Name of the input topic to listen to.
+        value: coloursNoWM
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write to.
+        value: ''
 
 # This section describes the Topics of the data pipeline
 topics:
