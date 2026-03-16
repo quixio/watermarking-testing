@@ -270,7 +270,6 @@ topics:
   - name: coloursNoWM
     configuration:
       partitions: 4
-  - name: flat-coloursNoWM
   - name: watermarks__colour_counter_v1_dev--watermarks
     configuration:
       partitions: 1
