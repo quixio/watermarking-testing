@@ -49,13 +49,19 @@ def _(mo):
     # TODO: Modify the SQL query for your data
     default_query = """
     SELECT 
-       run_id, 
-       min(count) as "min", 
-       mean(count) as "mean", 
-       max(count) as "max"
-    FROM carcoloursv2
-    GROUP BY run_id
-    LIMIT 100
+      watermarking.run_id,
+
+      min(watermarking.count) as "watermaking-min", 
+      mean(watermarking.count) as "watermaking-mean", 
+      max(watermarking.count) as "watermaking-max",
+
+      min(nowatermarking.count) as "nowatermarking-min", 
+      mean(nowatermarking.count) as "nowatermarking-mean", 
+      max(nowatermarking.count) as "nowatermarking-max",
+  
+    FROM carcoloursv2 as watermarking
+    JOIN carcoloursnomwv2 as nowatermarking ON watermarking.run_id == nowatermarking.run_id
+    GROUP BY watermarking.run_id
     """.strip()
 
     sql_form = mo.ui.code_editor(
@@ -85,52 +91,79 @@ def _():
 
 @app.cell
 def _(alt, df):
-    # Create a layered chart with range and mean line
-    _zoom2 = alt.selection_interval(bind='scales', name='zoom_selection2')
+    # Create watermarking chart with updated colors
+    _zoom1 = alt.selection_interval(bind='scales', name='zoom_selection1')
 
-    _base2 = alt.Chart(df)
-
-    # Background range area
-    _range_area2 = _base2.mark_area(
+    _watermarking_chart = alt.Chart(df).mark_area(
         opacity=0.3,
         color='lightblue'
     ).encode(
         x=alt.X('run_id:N', title='Run ID', axis=alt.Axis(labelAngle=-45, labelLimit=200)),
-        y=alt.Y('min:Q', title='Count'),
-        y2=alt.Y2('max:Q'),
-        tooltip=['run_id:N', 'min:Q', 'max:Q']
+        y=alt.Y('watermaking-min:Q', title='Count'),
+        y2=alt.Y2('watermaking-max:Q'),
+        tooltip=['run_id:N', 'watermaking-min:Q', 'watermaking-max:Q', 'watermaking-mean:Q']
+    ).add_params(
+        _zoom1
+    ).properties(
+        title='Watermarking Count Ranges by Run ID',
+        width=800,
+        height=350
     )
 
-    # Mean line
-    _mean_line2 = _base2.mark_line(
-        color='red',
-        strokeWidth=3
+    # Add mean line with high contrast
+    _watermarking_mean_line = alt.Chart(df).mark_line(
+        color='navy',
+        strokeWidth=3,
+        strokeDash=[5, 5]
     ).encode(
         x='run_id:N',
-        y='mean:Q',
-        tooltip=['run_id:N', 'mean:Q']
+        y='watermaking-mean:Q',
+        tooltip=['run_id:N', 'watermaking-mean:Q']
+    ).add_params(
+        _zoom1
     )
 
-    # Mean points for better visibility
-    _mean_points2 = _base2.mark_circle(
-        color='red',
-        size=100
+    watermarking_chart = (_watermarking_chart + _watermarking_mean_line)
+    watermarking_chart
+    return
+
+
+@app.cell
+def _(alt, df):
+    # Create nowatermarking chart with updated colors
+    _zoom2 = alt.selection_interval(bind='scales', name='zoom_selection2')
+
+    _nowatermarking_chart = alt.Chart(df).mark_area(
+        opacity=0.3,
+        color='wheat'
     ).encode(
-        x='run_id:N',
-        y='mean:Q',
-        tooltip=['run_id:N', 'mean:Q', 'min:Q', 'max:Q']
-    )
-
-    # Combine layers and add the selection parameter once on the combined chart
-    chart2 = (_range_area2 + _mean_line2 + _mean_points2).add_params(
+        x=alt.X('run_id:N', title='Run ID', axis=alt.Axis(labelAngle=-45, labelLimit=200)),
+        y=alt.Y('nowatermarking-min:Q', title='Count'),
+        y2=alt.Y2('nowatermarking-max:Q'),
+        tooltip=['run_id:N', 'nowatermarking-min:Q', 'nowatermarking-max:Q', 'nowatermarking-mean:Q']
+    ).add_params(
         _zoom2
     ).properties(
-        title='Count Statistics by Run ID',
-        width=600,
-        height=400
+        title='No-Watermarking Count Ranges by Run ID',
+        width=800,
+        height=350
     )
 
-    chart2
+    # Add mean line with high contrast
+    _nowatermarking_mean_line = alt.Chart(df).mark_line(
+        color='darkred',
+        strokeWidth=3,
+        strokeDash=[5, 5]
+    ).encode(
+        x='run_id:N',
+        y='nowatermarking-mean:Q',
+        tooltip=['run_id:N', 'nowatermarking-mean:Q']
+    ).add_params(
+        _zoom2
+    )
+
+    nowatermarking_chart = (_nowatermarking_chart + _nowatermarking_mean_line)
+    nowatermarking_chart
     return
 
 
