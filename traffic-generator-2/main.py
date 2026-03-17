@@ -6,8 +6,6 @@ import random
 import time
 from datetime import datetime, timezone, timedelta
 
-CET = timezone(timedelta(hours=1))
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -30,6 +28,7 @@ COLOURS = [
 
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
 RUN_DURATION_SECONDS = int(os.environ.get("RUN_DURATION_SECONDS", "60"))
+RUN_ID_PREFIX = os.environ.get("RUN_ID_PREFIX", "run")
 
 
 class VehicleTrafficGenerator(Source):
@@ -50,7 +49,7 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = "run_" + str(datetime.now(CET))
+        run_id = RUN_ID_PREFIX + "_" + str(datetime.now(CET))
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
         print(f"run_id={run_id}")

@@ -298,6 +298,10 @@ deployments:
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
         value: 10
+      - name: RUN_ID_PREFIX
+        inputType: FreeText
+        description: Prefix used in the run_id (replaces the hardcoded "run" part)
+        value: run
 
 # This section describes the Topics of the data pipeline
 topics:

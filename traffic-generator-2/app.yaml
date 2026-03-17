@@ -16,6 +16,10 @@ variables:
     inputType: FreeText
     description: Total number of seconds to generate traffic before stopping
     defaultValue: 60
+  - name: RUN_ID_PREFIX
+    inputType: FreeText
+    description: Prefix used in the run_id (replaces the hardcoded "run" part)
+    defaultValue: run
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
