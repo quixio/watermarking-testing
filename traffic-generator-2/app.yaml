@@ -1,4 +1,4 @@
-name: Traffic Generator 2
+name: Traffic Generator Single Run
 language: python
 variables:
   - name: output
