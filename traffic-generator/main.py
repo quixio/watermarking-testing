@@ -30,6 +30,7 @@ RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
 IDLE_COLOUR_COUNT = int(os.environ.get("IDLE_COLOUR_COUNT", "3"))
 IDLE_DURATION_SECONDS = int(os.environ.get("IDLE_DURATION_SECONDS", "30"))
 ACTIVE_DURATION_SECONDS = int(os.environ.get("ACTIVE_DURATION_SECONDS", "60"))
+SPARSE_INTERVAL_SECONDS = int(os.environ.get("SPARSE_INTERVAL_SECONDS", "30"))
 
 
 class VehicleTrafficGenerator(Source):
@@ -64,6 +65,7 @@ class VehicleTrafficGenerator(Source):
         idle_phase_start = time.monotonic()
         in_idle_phase = False
         phase_duration = ACTIVE_DURATION_SECONDS
+        last_sparse_sent: dict = {}  # colour -> time.monotonic() of last sparse message
 
         while self.running:
             tick_start = time.monotonic()
@@ -88,6 +90,22 @@ class VehicleTrafficGenerator(Source):
 
             for colour in COLOURS:
                 if colour in idle_colours:
+                    # Send one sparse message if the interval has elapsed
+                    now = tick_start
+                    if now - last_sparse_sent.get(colour, 0) >= SPARSE_INTERVAL_SECONDS:
+                        value = {
+                            "plate": self._generate_plate(),
+                            "brand": BRANDS[0],
+                            "colour": colour,
+                            "passengers": random.randint(1, 4),
+                            "run_id": run_id,
+                            "ts": second_start_ms + random.randint(0, 999),
+                        }
+                        msg = self.serialize(key=BRANDS[0], value=value)
+                        self.produce(key=msg.key, value=msg.value)
+                        last_sparse_sent[colour] = now
+                        second_sent += 1
+                        total_sent += 1
                     continue
                 for brand in BRANDS:
                     for _ in range(MESSAGES_PER_BRAND_COLOUR):

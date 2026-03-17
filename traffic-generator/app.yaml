@@ -36,6 +36,11 @@ variables:
     description: Seconds between idle phases (all colours active)
     defaultValue: 60
     required: false
+  - name: SPARSE_INTERVAL_SECONDS
+    inputType: FreeText
+    description: Seconds between sparse messages for idle colours (keeps partitions alive for global watermark)
+    defaultValue: 30
+    required: false
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
