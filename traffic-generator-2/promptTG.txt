@@ -1,0 +1,30 @@
+Write a Python Quix Streams data source application that generates simulated vehicle traffic data and publishes it to a Kafka topic.
+
+Requirements:
+- Use `quixstreams` Application and Source base class
+- Use `python-dotenv` to load environment variables from a .env file
+- Read the output topic name from an environment variable called `output`
+- Define a list of 20 car BRANDS (e.g. Toyota, Honda, Ford, BMW, Mercedes, Audi, Volkswagen, Tesla, Hyundai, Kia, Nissan, Chevrolet, Mazda, Subaru, Volvo, Porsche, Lexus, Jaguar, Ferrari, Lamborghini)
+- Define a list of 20 COLOURS (e.g. Red, Blue, Green, Black, White, Silver, Grey, Yellow, Orange, Purple, Brown, Beige, Gold, Navy, Teal, Maroon, Coral, Ivory, Cyan, Magenta)
+
+Create a class `VehicleTrafficGenerator(Source)` with:
+- A `_generate_plate()` method that generates a unique numberplate-style key: two random uppercase letters, a dash, and a zero-padded 5-digit counter (e.g. "AB-00001"). Uses a `_plate_counter` instance variable.
+- A `run()` method that:
+  - Simulates 60 seconds of traffic
+  - For each second (0–59), for each of the 20 colours, produces exactly 10 vehicle messages
+  - Total: 20 colours × 10 vehicles × 60 seconds = 12,000 messages
+  - Each message has fields: `plate`, `brand` (random), `colour`, `passengers` (random int 1–4), `ts_start` (ISO timestamp of when the run started), `ts` (epoch ms = base second + random 0–999ms offset)
+  - Message key is the vehicle brand
+  - Calls `self.serialize(key=brand, value=value)` then `self.produce(key=..., value=...)`
+  - Prints progress after each second: "Produced second X/60 (ISO timestamp)"
+  - Checks `self.running` after each second and returns early if False
+  - Prints "Finished producing 12,000 vehicle messages." when done
+
+In `main()`:
+- Create an `Application(consumer_group="traffic_generator", auto_create_topics=True)`
+- Instantiate `VehicleTrafficGenerator(name="vehicle-traffic-producer")`
+- Get the output topic via `app.topic(name=os.environ["output"])`
+- Call `app.add_source(source=source, topic=output_topic)`
+- Call `app.run()`
+
+Guard with `if __name__ == "__main__": main()`
