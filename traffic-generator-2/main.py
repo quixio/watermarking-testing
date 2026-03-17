@@ -25,8 +25,6 @@ COLOURS = [
 
 
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
-RUN_ID_MIN_SECONDS = int(os.environ.get("RUN_ID_MIN_SECONDS", "20"))
-RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
 RUN_DURATION_SECONDS = int(os.environ.get("RUN_DURATION_SECONDS", "60"))
 
 
@@ -44,19 +42,14 @@ class VehicleTrafficGenerator(Source):
         prefix = "".join(random.choices(letters, k=2))
         return f"{prefix}-{self._plate_counter:05d}"
 
-    def _new_run_id(self):
-        return "run_" + str(datetime.now(timezone.utc))
-
     def run(self):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = self._new_run_id()
-        run_id_duration = random.randint(RUN_ID_MIN_SECONDS, RUN_ID_MAX_SECONDS)   # seconds before first rotation
-        run_id_seconds_used = 0
+        run_id = "run_" + str(datetime.now(timezone.utc))
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
-        print(f"run_id={run_id}, will rotate after {run_id_duration}s")
+        print(f"run_id={run_id}")
         print(f"Will run for {RUN_DURATION_SECONDS}s then stop.")
 
         while self.running and second_offset < RUN_DURATION_SECONDS:
@@ -87,21 +80,13 @@ class VehicleTrafficGenerator(Source):
                         total_sent += 1
 
             second_offset += 1
-            run_id_seconds_used += 1
             elapsed = time.monotonic() - tick_start
             remaining = 1.0 - elapsed
             if remaining > 0:
                 time.sleep(remaining)
-            print(f"Produced second {second_offset} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}, run_id={run_id} ({run_id_seconds_used}/{run_id_duration}s), generation took: {elapsed:.3f}s")
+            print(f"Produced second {second_offset}/{RUN_DURATION_SECONDS} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}, run_id={run_id}, generation took: {elapsed:.3f}s")
 
-            # Rotate run_id only after a full second-tick (all brands×colours complete)
-            if run_id_seconds_used >= run_id_duration:
-                run_id = self._new_run_id()
-                run_id_duration = random.randint(RUN_ID_MIN_SECONDS, RUN_ID_MAX_SECONDS)
-                run_id_seconds_used = 0
-                print(f"run_id rotated → {run_id}, next rotation in {run_id_duration}s")
-
-        print(f"Finished after {second_offset}s. Total messages sent: {total_sent:,}")
+        print(f"Stopped. Total messages sent: {total_sent:,}")
 
 
 def main():
