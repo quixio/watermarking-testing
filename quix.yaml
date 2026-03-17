@@ -32,6 +32,7 @@ deployments:
         inputType: FreeText
         description: Maximum number of seconds before rotating run_id
         value: 50
+    disabled: true
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
@@ -272,6 +273,28 @@ deployments:
         icon: note_alt
         order: 0
         badge: BETA
+  - name: Traffic Generator SingleRun
+    application: traffic-generator-2
+    version: latest
+    deploymentType: Job
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write into
+        required: true
+        value: highway-2
+      - name: MESSAGES_PER_BRAND_COLOUR
+        inputType: FreeText
+        description: Number of messages to generate per (brand, colour) pair each second
+        value: 200
+      - name: RUN_DURATION_SECONDS
+        inputType: FreeText
+        description: Total number of seconds to generate traffic before stopping
+        value: 60
 
 # This section describes the Topics of the data pipeline
 topics:
