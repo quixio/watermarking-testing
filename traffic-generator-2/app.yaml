@@ -18,6 +18,10 @@ variables:
     inputType: FreeText
     description: Maximum number of seconds before rotating run_id
     defaultValue: 200
+  - name: RUN_DURATION_SECONDS
+    inputType: FreeText
+    description: Total number of seconds to generate traffic before stopping
+    defaultValue: 60
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py

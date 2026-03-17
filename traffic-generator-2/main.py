@@ -27,6 +27,7 @@ COLOURS = [
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
 RUN_ID_MIN_SECONDS = int(os.environ.get("RUN_ID_MIN_SECONDS", "20"))
 RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
+RUN_DURATION_SECONDS = int(os.environ.get("RUN_DURATION_SECONDS", "60"))
 
 
 class VehicleTrafficGenerator(Source):
@@ -56,8 +57,9 @@ class VehicleTrafficGenerator(Source):
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
         print(f"run_id={run_id}, will rotate after {run_id_duration}s")
+        print(f"Will run for {RUN_DURATION_SECONDS}s then stop.")
 
-        while self.running:
+        while self.running and second_offset < RUN_DURATION_SECONDS:
             tick_start = time.monotonic()
             second_start = datetime.now(timezone.utc).replace(microsecond=0)
             second_start_ms = int(second_start.timestamp() * 1000)
@@ -99,7 +101,7 @@ class VehicleTrafficGenerator(Source):
                 run_id_seconds_used = 0
                 print(f"run_id rotated → {run_id}, next rotation in {run_id_duration}s")
 
-        print(f"Stopped. Total messages sent: {total_sent:,}")
+        print(f"Finished after {second_offset}s. Total messages sent: {total_sent:,}")
 
 
 def main():
