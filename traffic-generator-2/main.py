@@ -4,10 +4,12 @@ from quixstreams.sources import Source
 import os
 import random
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from dotenv import load_dotenv
 load_dotenv()
+
+CET = timezone(timedelta(hours=1))
 
 BRANDS = [
     "Toyota", "Honda", "Ford", "BMW", "Mercedes",
@@ -46,7 +48,7 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = "run_" + str(datetime.now(timezone.cet))
+        run_id = "run_" + str(datetime.now(CET))
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
         print(f"run_id={run_id}")
@@ -54,7 +56,7 @@ class VehicleTrafficGenerator(Source):
 
         while self.running and second_offset < RUN_DURATION_SECONDS:
             tick_start = time.monotonic()
-            second_start = datetime.now(timezone.cet).replace(microsecond=0)
+            second_start = datetime.now(CET).replace(microsecond=0)
             second_start_ms = int(second_start.timestamp() * 1000)
             second_sent = 0
 
