@@ -9,8 +9,9 @@ variables:
     required: true
   - name: MESSAGES_PER_BRAND_COLOUR
     inputType: FreeText
+    multiline: false
     description: Number of messages to generate per (brand, colour) pair each second
-    defaultValue: 1
+    defaultValue: 200
   - name: RUN_DURATION_SECONDS
     inputType: FreeText
     description: Total number of seconds to generate traffic before stopping
