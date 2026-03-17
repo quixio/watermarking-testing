@@ -290,11 +290,11 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 200
+        value: 20
       - name: RUN_DURATION_SECONDS
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
-        value: 60
+        value: 10
 
 # This section describes the Topics of the data pipeline
 topics:
