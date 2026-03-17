@@ -301,7 +301,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: exactly_once
+        value: at_least_once
 
 # This section describes the Topics of the data pipeline
 topics:
