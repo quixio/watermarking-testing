@@ -62,8 +62,8 @@ def _(mo):
       ON wm.run_id = nm.run_id
       AND wm.colour = nm.colour
       AND wm.start = nm.start
-    WHERE wm.run_id > 'run_2026-03-17 11:29:42'
-      AND wm.run_id < 'run_2026-03-17 11:34:00'
+    WHERE wm.run_id > 'run_2026-03-17 12:00:00'
+      AND wm.run_id < 'run_2026-03-17 12:04:00'
     GROUP BY wm.colour, wm.run_id
     ORDER BY wm.run_id DESC, wm.colour
     LIMIT 100
