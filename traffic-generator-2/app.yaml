@@ -1,0 +1,23 @@
+name: Traffic Generator 2
+language: python
+variables:
+  - name: output
+    inputType: OutputTopic
+    description: Name of the output topic to write into
+    defaultValue: csv-data
+    required: true
+  - name: MESSAGES_PER_BRAND_COLOUR
+    inputType: FreeText
+    description: Number of messages to generate per (brand, colour) pair each second
+    defaultValue: 1
+  - name: RUN_ID_MIN_SECONDS
+    inputType: FreeText
+    description: Minimum number of seconds before rotating run_id
+    defaultValue: 20
+  - name: RUN_ID_MAX_SECONDS
+    inputType: FreeText
+    description: Maximum number of seconds before rotating run_id
+    defaultValue: 200
+dockerfile: dockerfile
+runEntryPoint: main.py
+defaultFile: main.py
