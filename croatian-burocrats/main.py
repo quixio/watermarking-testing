@@ -33,7 +33,7 @@ def main():
         consumer_group="burocrats_watermarking_" + os.environ["consumer_group"],
         auto_create_topics=True,
         auto_offset_reset="earliest",
-        processing_guarantee="exactly-once",
+        #processing_guarantee="exactly-once",
         commit_every=1000,
         commit_interval=10
     )
