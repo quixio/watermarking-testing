@@ -33,7 +33,7 @@ def main():
         consumer_group="burocrats_no_watermarking_" + os.environ["consumer_group"],
         auto_create_topics=True,
         auto_offset_reset="earliest",
-        processing_guarantee="at-least-once"
+        processing_guarantee="exactly-once"
     )
 
     input_topic = app.topic(
