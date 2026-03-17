@@ -35,7 +35,7 @@ deployments:
       - name: IDLE_COLOUR_COUNT
         inputType: FreeText
         description: Number of colours to suppress simultaneously during idle phases (0 to disable)
-        value: 8
+        value: 15
       - name: IDLE_DURATION_SECONDS
         inputType: FreeText
         description: Seconds each idle phase lasts
