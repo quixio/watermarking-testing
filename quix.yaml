@@ -27,11 +27,11 @@ deployments:
       - name: RUN_ID_MIN_SECONDS
         inputType: FreeText
         description: Minimum number of seconds before rotating run_id
-        value: 120
+        value: 240
       - name: RUN_ID_MAX_SECONDS
         inputType: FreeText
         description: Maximum number of seconds before rotating run_id
-        value: 120
+        value: 240
       - name: IDLE_COLOUR_COUNT
         inputType: FreeText
         description: Number of colours to suppress simultaneously during idle phases (0 to disable)
