@@ -11,6 +11,8 @@ CET = timezone(timedelta(hours=1))
 from dotenv import load_dotenv
 load_dotenv()
 
+CET = timezone(timedelta(hours=1))
+
 BRANDS = [
     "Toyota", "Honda", "Ford", "BMW", "Mercedes",
     "Audi", "Volkswagen", "Tesla", "Hyundai", "Kia",
