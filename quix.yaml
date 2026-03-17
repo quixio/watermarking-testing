@@ -376,6 +376,8 @@ deployments:
         inputType: FreeText
         description: How many files can be written in parallel to storage at once (based on partitioning + batch size)
         value: 10
+    blobStorage:
+      bind: true
 
 # This section describes the Topics of the data pipeline
 topics:
