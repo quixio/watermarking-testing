@@ -39,7 +39,7 @@ deployments:
       - name: IDLE_DURATION_SECONDS
         inputType: FreeText
         description: Seconds each idle phase lasts
-        value: 30
+        value: 60
       - name: ACTIVE_DURATION_SECONDS
         inputType: FreeText
         description: Seconds between idle phases (all colours active)
