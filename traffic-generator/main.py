@@ -27,6 +27,9 @@ COLOURS = [
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
 RUN_ID_MIN_SECONDS = int(os.environ.get("RUN_ID_MIN_SECONDS", "20"))
 RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
+IDLE_COLOUR_COUNT = int(os.environ.get("IDLE_COLOUR_COUNT", "3"))
+IDLE_DURATION_SECONDS = int(os.environ.get("IDLE_DURATION_SECONDS", "30"))
+ACTIVE_DURATION_SECONDS = int(os.environ.get("ACTIVE_DURATION_SECONDS", "60"))
 
 
 class VehicleTrafficGenerator(Source):
@@ -57,14 +60,36 @@ class VehicleTrafficGenerator(Source):
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
         print(f"run_id={run_id}, will rotate after {run_id_duration}s")
 
+        idle_colours: set = set()
+        idle_phase_start = time.monotonic()
+        in_idle_phase = False
+        phase_duration = ACTIVE_DURATION_SECONDS
+
         while self.running:
             tick_start = time.monotonic()
+
+            # Rotate idle/active phase when current phase expires
+            elapsed_in_phase = tick_start - idle_phase_start
+            if elapsed_in_phase >= phase_duration:
+                if in_idle_phase:
+                    idle_colours = set()
+                    in_idle_phase = False
+                    phase_duration = ACTIVE_DURATION_SECONDS
+                else:
+                    idle_colours = set(random.sample(COLOURS, min(IDLE_COLOUR_COUNT, len(COLOURS))))
+                    in_idle_phase = True
+                    phase_duration = IDLE_DURATION_SECONDS
+                idle_phase_start = tick_start
+                print(f"Phase changed → idle={in_idle_phase}, suppressed colours: {idle_colours or 'none'}")
+
             second_start = datetime.now(timezone.utc).replace(microsecond=0)
             second_start_ms = int(second_start.timestamp() * 1000)
             second_sent = 0
 
-            for brand in BRANDS:
-                for colour in COLOURS:
+            for colour in COLOURS:
+                if colour in idle_colours:
+                    continue
+                for brand in BRANDS:
                     for _ in range(MESSAGES_PER_BRAND_COLOUR):
                         plate = self._generate_plate()
                         passengers = random.randint(1, 4)

@@ -48,18 +48,23 @@ def _(QuixLakeClient, os):
 def _(mo):
     # TODO: Modify the SQL query for your data
     default_query = """
-    SELECT 
-      watermarking.run_id,
-      count(watermarking.count) as "watermarking count",
-      count(nowatermarking.count) as "nowatermarking count",
-      abs(max(watermarking.count)-min(watermarking.count)) as "watermaking", 
-      abs(max(nowatermarking.count)-min(nowatermarking.count)) as "nowatermarking", 
-
-    FROM carcoloursnomwv2_daniel as nowatermarking
-    LEFT OUTER JOIN carcolours_daniel as watermarking ON watermarking.run_id == nowatermarking.run_id
-    GROUP BY watermarking.run_id
-    ORDER BY run_id DESC
-    LIMIT 10
+    SELECT
+      wm.colour,
+      wm.run_id,
+      avg(wm.processed_ts - wm.end) / 1000.0   AS wm_avg_lag_s,
+      avg(nm.processed_ts - nm.end)  / 1000.0  AS nowm_avg_lag_s,
+      max(wm.processed_ts - wm.end)  / 1000.0  AS wm_max_lag_s,
+      max(nm.processed_ts - nm.end)  / 1000.0  AS nowm_max_lag_s,
+      count(wm.count)                           AS wm_windows,
+      count(nm.count)                           AS nowm_windows
+    FROM carcolours_daniel AS wm
+    LEFT OUTER JOIN carcoloursnomwv2_daniel AS nm
+      ON wm.run_id = nm.run_id
+      AND wm.colour = nm.colour
+      AND wm.start = nm.start
+    GROUP BY wm.colour, wm.run_id
+    ORDER BY wm.run_id DESC, wm.colour
+    LIMIT 100
     """.strip()
 
     sql_form = mo.ui.code_editor(
@@ -89,74 +94,29 @@ def _():
 
 @app.cell
 def _(alt, df):
-    # Create base chart
-    _base_chart = alt.Chart(df).add_selection(
-        alt.selection_interval()
+    # Fold wm_avg_lag_s and nowm_avg_lag_s into long form for grouped bars
+    _chart = alt.Chart(df).transform_fold(
+        ['wm_avg_lag_s', 'nowm_avg_lag_s'],
+        as_=['pipeline', 'avg_lag_s']
+    ).mark_bar().encode(
+        x=alt.X('colour:N', title='Colour', axis=alt.Axis(labelAngle=45)),
+        y=alt.Y('avg_lag_s:Q', title='Avg window closure lag (s)'),
+        color=alt.Color('pipeline:N',
+                        title='Pipeline',
+                        scale=alt.Scale(
+                            domain=['wm_avg_lag_s', 'nowm_avg_lag_s'],
+                            range=['#1f77b4', '#ff7f0e']
+                        )),
+        xOffset='pipeline:N',
+        column=alt.Column('run_id:N', title='Run ID'),
+        tooltip=['colour:N', 'pipeline:N', 'avg_lag_s:Q', 'wm_windows:Q', 'nowm_windows:Q']
     ).properties(
-        width=700,
-        height=400,
-        title='Watermarking Metrics and Count by Run ID'
-    )
-
-    # Left axis - watermarking metrics starting from 0
-    _left_axis_chart = _base_chart.transform_fold(
-        ['watermaking', 'nowatermarking'],
-        as_=['metric_type', 'difference_value']
-    ).mark_line(
-        point=True,
-        strokeWidth=3
-    ).encode(
-        x=alt.X('run_id:O', 
-                title='Run ID',
-                axis=alt.Axis(labelAngle=45)),
-        y=alt.Y('difference_value:Q', 
-                title='Count Difference (Left Axis)',
-                scale=alt.Scale(domain=[0, df[['watermaking', 'nowatermarking']].max().max() * 1.1], zero=True)),
-        color=alt.Color('metric_type:N', 
-                       title='Metric Type',
-                       scale=alt.Scale(
-                           domain=['watermaking', 'nowatermarking'],
-                           range=['#1f77b4', '#ff7f0e']
-                       )),
-        tooltip=['run_id:O', 'metric_type:N', 'difference_value:Q']
-    )
-
-    # Right axis - watermarking count and nowatermarking count
-    _right_axis_chart = _base_chart.transform_fold(
-        ['watermarking count', 'nowatermarking count'],
-        as_=['count_type', 'count_value']
-    ).mark_line(
-        point=True,
-        strokeWidth=3,
-        strokeDash=[5, 5]
-    ).encode(
-        x=alt.X('run_id:O'),
-        y=alt.Y('count_value:Q', 
-                title='Count (Right Axis)',
-                scale=alt.Scale(
-                    domain=[
-                        df[['watermarking count', 'nowatermarking count']].min().min() * 0.95,
-                        df[['watermarking count', 'nowatermarking count']].max().max() * 1.05
-                    ]
-                )),
-        color=alt.Color('count_type:N', 
-                       title='Metric Type',
-                       scale=alt.Scale(
-                           domain=['watermarking count', 'nowatermarking count'],
-                           range=['#d62728', '#2ca02c']
-                       )),
-        tooltip=['run_id:O', 'count_type:N', 'count_value:Q']
-    )
-
-    # Layer the charts with independent y-scales
-    chart = alt.layer(
-        _left_axis_chart,
-        _right_axis_chart
-    ).resolve_scale(
-        y='independent'
+        width=400,
+        height=300,
+        title='Window closure lag by colour: watermarking (blue) vs no-watermarking (orange)'
     ).interactive()
 
-    chart
+    _chart
     return
 
 

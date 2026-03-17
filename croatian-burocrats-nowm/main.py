@@ -5,9 +5,7 @@ from quixstreams import Application
 
 import os
 import logging
-import threading
 import time
-from collections import defaultdict
 from quixstreams.dataframe.windows import Count, First
 
 # for local dev, load env vars from a .env file
@@ -57,12 +55,14 @@ def main():
     sdf = (
         sdf
         .tumbling_window(duration_ms=timedelta(seconds=1), grace_ms=timedelta(seconds=10))
-        .agg(count=Count(), run_id=First("run_id"))
+        .agg(count=Count(), run_id=First("run_id"), colour=First("colour"))
         .final()
     )
 
+    sdf = sdf.apply(lambda val: {**val, "processed_ts": int(time.time() * 1000)})
+
     sdf.print_table()
-    
+
     sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
