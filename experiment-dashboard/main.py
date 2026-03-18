@@ -257,17 +257,20 @@ HTML = """<!DOCTYPE html>
       background: #fff;
     }
     .btn-refresh {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--accent);
+      border: none;
       border-radius: 6px;
-      padding: 0.25rem 0.9rem;
-      color: var(--text);
-      font-size: 0.8rem;
+      padding: 0.45rem 1.2rem;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 0 12px rgba(79,142,247,0.3);
     }
-    .btn-refresh:hover { background: #2d3047; border-color: var(--accent); }
-    .btn-refresh:active { opacity: 0.7; }
+    .btn-refresh:hover { background: #3a7ae4; box-shadow: 0 0 18px rgba(79,142,247,0.5); }
+    .btn-refresh:active { transform: scale(0.96); }
+    .btn-refresh:disabled { background: var(--border); box-shadow: none; cursor: wait; }
     .legend {
       display: flex;
       gap: 1.5rem;
