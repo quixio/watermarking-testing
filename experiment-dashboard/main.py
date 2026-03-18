@@ -73,6 +73,7 @@ HTML = """<!DOCTYPE html>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Watermarking Experiment Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #0f1117;
@@ -316,6 +317,26 @@ HTML = """<!DOCTYPE html>
       padding: 3rem 0;
       text-align: center;
     }
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .chart-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
     footer {
       margin-top: 2.5rem;
       font-size: 0.72rem;
@@ -385,11 +406,142 @@ HTML = """<!DOCTYPE html>
 
   <div id="error-box" style="display:none"></div>
 
+  <div class="charts" id="charts-section" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">Window Count Spread per Run (lower = better for WM)</div>
+      <canvas id="chart-diff"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Completed Windows per Run</div>
+      <canvas id="chart-count"></canvas>
+    </div>
+  </div>
+
   <footer>Queries <code>carcoloursv3</code> ⋈ <code>carcoloursnomwv3</code> · last 10 runs</footer>
 
   <script>
     let prevRunIds = [];
     let maxDiff = 1;
+    let diffChart = null;
+    let countChart = null;
+
+    const CHART_DEFAULTS = {
+      color: '#8892a4',
+      borderColor: '#2d3047',
+    };
+    Chart.defaults.color = CHART_DEFAULTS.color;
+
+    function makeChart(id, config) {
+      return new Chart(document.getElementById(id).getContext('2d'), config);
+    }
+
+    function updateCharts(rows) {
+      // Charts show oldest → newest (reverse of table)
+      const ordered = [...rows].reverse();
+      const labels   = ordered.map(r => r.run_id ?? '?');
+      const wmDiffs  = ordered.map(r => r.watermarking_diff   ?? 0);
+      const nowmDiffs= ordered.map(r => r.nowatermarking_diff  ?? 0);
+      const wmCounts = ordered.map(r => r.watermarking_count  ?? 0);
+      const nowmCounts=ordered.map(r => r.nowatermarking_count ?? 0);
+
+      const gridColor = '#2d3047';
+      const tickColor = '#8892a4';
+      const axisFont  = { size: 10 };
+
+      const sharedScales = {
+        x: {
+          ticks: { color: tickColor, font: axisFont, maxRotation: 45 },
+          grid:  { color: gridColor },
+        },
+        y: {
+          ticks: { color: tickColor, font: axisFont },
+          grid:  { color: gridColor },
+          beginAtZero: true,
+        },
+      };
+
+      document.getElementById('charts-section').style.display = 'grid';
+
+      // --- Diff chart (grouped bar) ---
+      const diffData = {
+        labels,
+        datasets: [
+          {
+            label: 'WM diff',
+            data: wmDiffs,
+            backgroundColor: 'rgba(52,211,153,0.7)',
+            borderColor: '#34d399',
+            borderWidth: 1,
+            borderRadius: 3,
+          },
+          {
+            label: 'NoWM diff',
+            data: nowmDiffs,
+            backgroundColor: 'rgba(167,139,250,0.7)',
+            borderColor: '#a78bfa',
+            borderWidth: 1,
+            borderRadius: 3,
+          },
+        ],
+      };
+      if (diffChart) {
+        diffChart.data = diffData;
+        diffChart.update();
+      } else {
+        diffChart = makeChart('chart-diff', {
+          type: 'bar',
+          data: diffData,
+          options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: tickColor, font: axisFont } } },
+            scales: sharedScales,
+          },
+        });
+      }
+
+      // --- Count chart (line) ---
+      const countData = {
+        labels,
+        datasets: [
+          {
+            label: 'WM count',
+            data: wmCounts,
+            borderColor: '#4f8ef7',
+            backgroundColor: 'rgba(79,142,247,0.15)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.3,
+          },
+          {
+            label: 'NoWM count',
+            data: nowmCounts,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.3,
+          },
+        ],
+      };
+      if (countChart) {
+        countChart.data = countData;
+        countChart.update();
+      } else {
+        countChart = makeChart('chart-count', {
+          type: 'line',
+          data: countData,
+          options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: tickColor, font: axisFont } } },
+            scales: sharedScales,
+          },
+        });
+      }
+    }
 
     function avg(arr) {
       if (!arr.length) return 0;
@@ -470,6 +622,7 @@ HTML = """<!DOCTYPE html>
         });
 
         prevRunIds = newRunIds;
+        updateCharts(rows);
         const now = new Date();
         const hh = String(now.getHours()).padStart(2, '0');
         const mm = String(now.getMinutes()).padStart(2, '0');
