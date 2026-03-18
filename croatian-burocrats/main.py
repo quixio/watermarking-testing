@@ -82,6 +82,8 @@ def main():
 
     sdf = sdf[sdf.contains("run_id")]
 
+    sdf = sdf.apply(_wm_dump)  
+
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
     sdf = sdf.group_by("colour")
 
