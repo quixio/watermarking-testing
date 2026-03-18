@@ -32,7 +32,7 @@ def _dbg_set_topics(self, topics):
     logger.info("[WM] Tracking %d TPs: %s", len(self._watermarks), ", ".join(f"{t}[{p}]" for (t, p) in sorted(self._watermarks.keys())))
 																																																																								   
 def _dbg_receive(self, message):                                                                                                                                                                                                                                                                       
-  result = _orig_wm_recv(self, message)
+    result = _orig_wm_recv(self, message)
     if result is not None:
         logger.info("[WM] ADVANCED -> %d ms  (tp=%s[%d])", result, message["topic"], message["partition"])                                                                                                                                                                                             
     else:                                                                                                                                                                                                                                                                                                        
