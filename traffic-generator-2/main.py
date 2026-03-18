@@ -49,7 +49,7 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = RUN_ID_PREFIX + "_" + str(datetime.now(CET))
+        run_id = "run_" + str(datetime.now(CET)) + RUN_ID_PREFIX
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
         print(f"run_id={run_id}")
