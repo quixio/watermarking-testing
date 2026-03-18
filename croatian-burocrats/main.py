@@ -14,12 +14,6 @@ from quixstreams.dataframe.windows import Count, First
 from dotenv import load_dotenv
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [colour-counter] %(message)s",
-)
-logger = logging.getLogger(__name__)
-
 # -- Watermark debug instrumentation --------------------------------------                                                                                                                                                                                                                            
 import quixstreams.processing.watermarking as _wm_mod
 
@@ -30,11 +24,11 @@ _orig_wm_set = _wm_mod.WatermarkManager.set_topics_orig_wm_recv = _wm_mod.Waterm
 def _dbg_receive(self, message):
 	result = _orig_wm_recv(self, message)
 	if result is not None:
-		logger.info("[WM] ADVANCED -> %d ms  (tp=%s[%d])", result, message["topic"], message["partition"])
+		print("[WM] ADVANCED -> %d ms  (tp=%s[%d])", result, message["topic"], message["partition"])
 	else:  
 		stuck = [(t, p) for (t, p), v in self._watermarks.items() if v == -1]  
 	if stuck:  
-		logger.warning("[WM] STUCK at -1: %s", stuck)
+		print("[WM] STUCK at -1: %s", stuck)
 	return result  
 
 _wm_mod.WatermarkManager.receive = _dbg_receive
@@ -45,7 +39,7 @@ def _wm_dump(value):
 		_last_wm_dump[0] = now
 	if _wm_instance[0] is not None:
 		rows = sorted(_wm_instance[0]._watermarks.items())
-		logger.info("[WM] dump:\n%s", "\n".join(f"  {'STUCK' if v == -1 else '     '} {t}[{p}] = {v}" for (t, p), v in rows))
+		print("[WM] dump:\n%s", "\n".join(f"  {'STUCK' if v == -1 else '     '} {t}[{p}] = {v}" for (t, p), v in rows), flush=True)
 	return value     
 # -- end instrumentation --------------------------------------------------                                                                                                                                                                                                                         
                                                                                      
