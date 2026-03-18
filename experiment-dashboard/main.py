@@ -111,6 +111,7 @@ HTML = """<!DOCTYPE html>
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
+      color-scheme: dark;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
@@ -185,7 +186,19 @@ HTML = """<!DOCTYPE html>
     }
     .control-group input:focus { border-color: var(--accent); }
     .control-group input[type=number] { width: 80px; }
-    .control-group input[type=datetime-local] { width: 190px; }
+    .control-group input[type=datetime-local] {
+      width: 210px;
+      color-scheme: dark;
+      position: relative;
+    }
+    .control-group input[type=datetime-local]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
     .control-group input:disabled {
       opacity: 0.35;
       cursor: not-allowed;
@@ -194,30 +207,54 @@ HTML = """<!DOCTYPE html>
       width: 1px;
       background: var(--border);
       align-self: stretch;
-      margin: 0 0.25rem;
+      margin: 0 0.5rem;
     }
     .time-range-toggle {
       display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      justify-content: flex-end;
+      align-items: center;
+      align-self: center;
     }
     .time-range-toggle label {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
       color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
       cursor: pointer;
       user-select: none;
+      white-space: nowrap;
     }
     .time-range-toggle input[type=checkbox] {
-      accent-color: var(--accent);
-      width: 13px;
-      height: 13px;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 34px;
+      height: 18px;
+      background: var(--border);
+      border-radius: 999px;
+      position: relative;
       cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .time-range-toggle input[type=checkbox]::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .time-range-toggle input[type=checkbox]:checked {
+      background: var(--accent);
+    }
+    .time-range-toggle input[type=checkbox]:checked::after {
+      transform: translateX(16px);
+      background: #fff;
     }
     .btn-refresh {
       background: var(--surface);
