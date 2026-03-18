@@ -551,6 +551,32 @@ HTML = """<!DOCTYPE html>
     };
     Chart.defaults.color = CHART_DEFAULTS.color;
 
+    // Plugin: draw a minimum-height bar for zero values so they're visible
+    const minBarPlugin = {
+      id: 'minBarHeight',
+      afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'bar') return;
+        const MIN_PX = 4;
+        chart.data.datasets.forEach((ds, di) => {
+          const meta = chart.getDatasetMeta(di);
+          meta.data.forEach((bar, i) => {
+            const raw = ds.data[i];
+            if (raw === 0 || raw === null || raw === undefined) {
+              const ctx = chart.ctx;
+              const {x, width} = bar;
+              const base = bar.base;
+              ctx.save();
+              ctx.fillStyle = ds.borderColor || ds.backgroundColor;
+              ctx.globalAlpha = 0.5;
+              ctx.fillRect(x - width / 2, base - MIN_PX, width, MIN_PX);
+              ctx.restore();
+            }
+          });
+        });
+      }
+    };
+    Chart.register(minBarPlugin);
+
     function makeChart(id, config) {
       return new Chart(document.getElementById(id).getContext('2d'), config);
     }
@@ -619,31 +645,25 @@ HTML = """<!DOCTYPE html>
         });
       }
 
-      // --- Count chart (line) ---
+      // --- Count chart (grouped bar) ---
       const countData = {
         labels,
         datasets: [
           {
             label: 'WM count',
             data: wmCounts,
+            backgroundColor: 'rgba(79,142,247,0.7)',
             borderColor: '#4f8ef7',
-            backgroundColor: 'rgba(79,142,247,0.15)',
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            fill: true,
-            tension: 0.3,
+            borderWidth: 1,
+            borderRadius: 3,
           },
           {
             label: 'NoWM count',
             data: nowmCounts,
+            backgroundColor: 'rgba(245,158,11,0.7)',
             borderColor: '#f59e0b',
-            backgroundColor: 'rgba(245,158,11,0.1)',
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            fill: true,
-            tension: 0.3,
+            borderWidth: 1,
+            borderRadius: 3,
           },
         ],
       };
@@ -652,7 +672,7 @@ HTML = """<!DOCTYPE html>
         countChart.update();
       } else {
         countChart = makeChart('chart-count', {
-          type: 'line',
+          type: 'bar',
           data: countData,
           options: {
             responsive: true,
