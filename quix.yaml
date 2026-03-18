@@ -288,6 +288,31 @@ deployments:
         icon: note_alt
         order: 0
         badge: BETA
+  - name: watermarks-tests2
+    application: watermarks-tests
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: MARIMO_MODE
+        inputType: Options
+        description: Mode to run Marimo in
+        value: edit
+      - name: MARIMO_NOTEBOOK
+        inputType: FreeText
+        description: The notebook file to open (e.g., main.py)
+        value: main.py
+      - name: ANTHROPIC_API_KEY
+        inputType: Secret
+        description: Token generated from https://platform.claude.com/settings/keys.
+        secretKey: CLAUDE_TOKEN
+      - name: QUIX_LAKE_TOKEN
+        inputType: Secret
+        required: true
+        secretKey: pat
 
 # This section describes the Topics of the data pipeline
 topics:
