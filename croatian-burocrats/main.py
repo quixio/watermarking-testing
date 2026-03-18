@@ -35,7 +35,7 @@ _wm_mod.WatermarkManager.receive = _dbg_receive
 _last_wm_dump = [0.0]
 def _wm_dump(value):
     print("I pretend to operate")
-	now = time.monotonic()
+    now = time.monotonic()
 	if now - _last_wm_dump[0] >= 30.0:
 		_last_wm_dump[0] = now
 	if _wm_instance[0] is not None:
