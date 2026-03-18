@@ -95,7 +95,7 @@ def main():
     sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
-     print("[STARTUP] calling app.run()", flush=True)  
+    print("[STARTUP] calling app.run()", flush=True)  
     app.run()
 
 
