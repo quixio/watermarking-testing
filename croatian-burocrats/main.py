@@ -36,7 +36,7 @@ def _dbg_receive(self, message):
 	if stuck:  
 		logger.warning("[WM] STUCK at -1: %s", stuck)
 	return result  
-_wm_mod.WatermarkManager.set_topics = _dbg_set_topics
+
 _wm_mod.WatermarkManager.receive = _dbg_receive
 _last_wm_dump = [0.0]
 def _wm_dump(value):
