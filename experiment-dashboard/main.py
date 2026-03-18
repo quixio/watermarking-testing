@@ -31,18 +31,20 @@ def _to_run_id_prefix(iso_str: str) -> str:
     return "run_" + dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def build_query(
-    wm_table: str,
-    nowm_table: str,
-    limit: int,
-    from_dt: str | None = None,
-    to_dt: str | None = None,
-) -> str:
-    time_filter = ""
+def build_run_ids_query(table: str, limit: int, from_dt: str | None = None, to_dt: str | None = None) -> str:
+    """Fast: get newest run_ids from a single table (~2s)."""
+    filters = []
     if from_dt and to_dt:
         from_prefix = _to_run_id_prefix(from_dt)
         to_prefix   = _to_run_id_prefix(to_dt)
-        time_filter = f"WHERE nowatermarking.run_id >= '{from_prefix}' AND nowatermarking.run_id <= '{to_prefix}'"
+        filters.append(f"run_id >= '{from_prefix}' AND run_id <= '{to_prefix}'")
+    where = ("WHERE " + " AND ".join(filters)) if filters else ""
+    return f"SELECT DISTINCT run_id FROM {table} {where} ORDER BY run_id DESC LIMIT {limit}"
+
+
+def build_data_query(wm_table: str, nowm_table: str, run_ids: list[str], limit: int) -> str:
+    """Targeted: aggregate only specific run_ids with INNER JOIN."""
+    ids = ", ".join(f"'{rid}'" for rid in run_ids)
     return f"""
 SELECT
   watermarking.run_id,
@@ -51,8 +53,8 @@ SELECT
   abs(max(watermarking.count) - min(watermarking.count)) as "watermarking_diff",
   abs(max(nowatermarking.count) - min(nowatermarking.count)) as "nowatermarking_diff"
 FROM {nowm_table} as nowatermarking
-LEFT OUTER JOIN {wm_table} as watermarking ON watermarking.run_id == nowatermarking.run_id
-{time_filter}
+INNER JOIN {wm_table} as watermarking ON watermarking.run_id == nowatermarking.run_id
+WHERE nowatermarking.run_id IN ({ids})
 GROUP BY watermarking.run_id
 ORDER BY run_id DESC
 LIMIT {limit}
@@ -75,10 +77,25 @@ async def get_data(
     to_dt: str | None = None,
 ):
     try:
+        import time as _t
         client = get_client()
-        df = client.query(build_query(wm_table, nowm_table, limit, from_dt, to_dt))
+
+        # Phase 1: get newest run_ids from one table (~2s)
+        t0 = _t.time()
+        run_ids = client.query(build_run_ids_query(nowm_table, limit * 3, from_dt, to_dt))["run_id"].tolist()
+        p1_ms = round((_t.time() - t0) * 1000)
+
+        if not run_ids:
+            return JSONResponse(content={"data": [], "count": 0, "p1_ms": p1_ms, "p2_ms": 0})
+
+        # Phase 2: INNER JOIN filters out any that don't exist in the other table
+        t1 = _t.time()
+        df = client.query(build_data_query(wm_table, nowm_table, run_ids, limit))
+        p2_ms = round((_t.time() - t1) * 1000)
+
         records = df.to_dict(orient="records")
-        return JSONResponse(content={"data": records, "count": len(records)})
+        logger.info("Phase 1: %dms, Phase 2: %dms", p1_ms, p2_ms)
+        return JSONResponse(content={"data": records, "count": len(records), "p1_ms": p1_ms, "p2_ms": p2_ms})
     except Exception as e:
         logger.error("Query failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -776,8 +793,10 @@ HTML = """<!DOCTYPE html>
         const now = new Date();
         const hh = String(now.getHours()).padStart(2, '0');
         const mm = String(now.getMinutes()).padStart(2, '0');
+        const p1 = json.p1_ms ?? '?';
+        const p2 = json.p2_ms ?? '?';
         document.getElementById('last-updated').textContent =
-          'Updated ' + hh + ':' + mm;
+          hh + ':' + mm + ' · IDs ' + p1 + 'ms + data ' + p2 + 'ms';
       } catch (err) {
         dot.className = 'pulse error';
         statusText.textContent = 'Error';
