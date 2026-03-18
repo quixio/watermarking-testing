@@ -24,11 +24,10 @@ DEFAULT_NOWM_TABLE = "carcoloursnomwv3"
 DEFAULT_LIMIT      = 10
 
 
-def _to_run_id_prefix(iso_str: str) -> str:
-    """Convert a datetime-local ISO string (e.g. '2024-03-17T14:30') to the
-    run_id prefix format used by the traffic generator: 'run_2024-03-17 14:30:00'."""
+def _to_run_id_bound(prefix: str, iso_str: str) -> str:
+    """Build a run_id string for comparison using the given prefix."""
     dt = datetime.fromisoformat(iso_str)
-    return "run_" + dt.strftime("%Y-%m-%d %H:%M:%S")
+    return prefix + "_" + dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def build_run_ids_query(table: str, limit: int, run_prefix: str = "", from_dt: str | None = None, to_dt: str | None = None) -> str:
@@ -37,9 +36,9 @@ def build_run_ids_query(table: str, limit: int, run_prefix: str = "", from_dt: s
     if run_prefix:
         filters.append(f"run_id LIKE '{run_prefix}_%'")
     if from_dt and to_dt:
-        from_prefix = _to_run_id_prefix(from_dt)
-        to_prefix   = _to_run_id_prefix(to_dt)
-        filters.append(f"run_id >= '{from_prefix}' AND run_id <= '{to_prefix}'")
+        from_bound = _to_run_id_bound(run_prefix or "run", from_dt)
+        to_bound   = _to_run_id_bound(run_prefix or "run", to_dt)
+        filters.append(f"run_id >= '{from_bound}' AND run_id <= '{to_bound}'")
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
     return f"SELECT DISTINCT run_id FROM {table} {where} ORDER BY run_id DESC LIMIT {limit}"
 
