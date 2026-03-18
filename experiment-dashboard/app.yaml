@@ -1,0 +1,15 @@
+name: experiment-dashboard
+language: docker
+variables:
+  - name: QUIX_LAKE_TOKEN
+    inputType: Secret
+    description: Token to authenticate against QuixLake
+    multiline: false
+    defaultValue: pat
+    required: true
+  - name: QUIXLAKE_URL
+    inputType: FreeText
+    description: Base URL of the QuixLake instance
+    defaultValue: https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+dockerfile: dockerfile
+defaultFile: dockerfile

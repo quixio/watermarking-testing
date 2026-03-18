@@ -302,6 +302,38 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
         value: exacty_once_DB
+  - name: Experiment Dashboard
+    application: experiment-dashboard
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 300
+      replicas: 1
+    publicAccess:
+      enabled: true
+      urlPrefix: experimentdashboard
+    network:
+      ports:
+        - port: 80
+          targetPort: 8080
+    variables:
+      - name: QUIX_LAKE_TOKEN
+        inputType: Secret
+        required: true
+        secretKey: pat
+      - name: QUIXLAKE_URL
+        inputType: FreeText
+        value: https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+    plugin:
+      embeddedView:
+        enabled: true
+        hideHeader: true
+        default: true
+      sidebarItem:
+        show: true
+        icon: dashboard
+        order: 1
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
