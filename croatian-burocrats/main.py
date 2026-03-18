@@ -36,12 +36,12 @@ _last_wm_dump = [0.0]
 def _wm_dump(value):
     print("I pretend to operate")
     now = time.monotonic()
-	if now - _last_wm_dump[0] >= 30.0:
-		_last_wm_dump[0] = now
-	if _wm_instance[0] is not None:
-		rows = sorted(_wm_instance[0]._watermarks.items())
-		print("[WM] dump:\n%s", "\n".join(f"  {'STUCK' if v == -1 else '     '} {t}[{p}] = {v}" for (t, p), v in rows), flush=True)
-	return value     
+    if now - _last_wm_dump[0] >= 30.0:
+        _last_wm_dump[0] = now
+    if _wm_instance[0] is not None:
+        rows = sorted(_wm_instance[0]._watermarks.items())
+        print("[WM] dump:\n%s", "\n".join(f"  {'STUCK' if v == -1 else '     '} {t}[{p}] = {v}" for (t, p), v in rows), flush=True)
+    return value     
 # -- end instrumentation --------------------------------------------------                                                                                                                                                                                                                         
                                                                                      
 
