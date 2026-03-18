@@ -18,18 +18,24 @@ QUIXLAKE_URL = os.environ.get(
     "https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io",
 )
 
-SQL_QUERY = """
+DEFAULT_WM_TABLE   = "carcoloursv3"
+DEFAULT_NOWM_TABLE = "carcoloursnomwv3"
+DEFAULT_LIMIT      = 10
+
+
+def build_query(wm_table: str, nowm_table: str, limit: int) -> str:
+    return f"""
 SELECT
   watermarking.run_id,
   count(watermarking.count) as "watermarking_count",
   count(nowatermarking.count) as "nowatermarking_count",
   abs(max(watermarking.count) - min(watermarking.count)) as "watermarking_diff",
   abs(max(nowatermarking.count) - min(nowatermarking.count)) as "nowatermarking_diff"
-FROM carcoloursnomwv3 as nowatermarking
-LEFT OUTER JOIN carcoloursv3 as watermarking ON watermarking.run_id == nowatermarking.run_id
+FROM {nowm_table} as nowatermarking
+LEFT OUTER JOIN {wm_table} as watermarking ON watermarking.run_id == nowatermarking.run_id
 GROUP BY watermarking.run_id
 ORDER BY run_id DESC
-LIMIT 10
+LIMIT {limit}
 """.strip()
 
 
@@ -41,10 +47,14 @@ def get_client() -> QuixLakeClient:
 
 
 @app.get("/api/data")
-async def get_data():
+async def get_data(
+    wm_table: str = DEFAULT_WM_TABLE,
+    nowm_table: str = DEFAULT_NOWM_TABLE,
+    limit: int = DEFAULT_LIMIT,
+):
     try:
         client = get_client()
-        df = client.query(SQL_QUERY)
+        df = client.query(build_query(wm_table, nowm_table, limit))
         records = df.to_dict(orient="records")
         return JSONResponse(content={"data": records, "count": len(records)})
     except Exception as e:
@@ -117,6 +127,41 @@ HTML = """<!DOCTYPE html>
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+    .controls {
+      display: flex;
+      align-items: flex-end;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .control-group label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+    }
+    .control-group input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.7rem;
+      color: var(--text);
+      font-size: 0.85rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .control-group input:focus { border-color: var(--accent); }
+    .control-group input[type=number] { width: 80px; }
     .btn-refresh {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -290,6 +335,21 @@ HTML = """<!DOCTYPE html>
     </div>
   </header>
 
+  <div class="controls">
+    <div class="control-group">
+      <label>Watermarking table</label>
+      <input type="text" id="wm-table" value="carcoloursv3" />
+    </div>
+    <div class="control-group">
+      <label>No-watermarking table</label>
+      <input type="text" id="nowm-table" value="carcoloursnomwv3" />
+    </div>
+    <div class="control-group">
+      <label>Runs to display</label>
+      <input type="number" id="run-limit" value="10" min="1" max="100" />
+    </div>
+  </div>
+
   <div class="legend">
     <div class="legend-item"><div class="dot dot-blue"></div> Watermarking count</div>
     <div class="legend-item"><div class="dot dot-orange"></div> No-watermarking count</div>
@@ -351,7 +411,11 @@ HTML = """<!DOCTYPE html>
       btn.disabled = true;
       btn.textContent = '↻ Loading…';
       try {
-        const res = await fetch('/api/data');
+        const wmTable   = document.getElementById('wm-table').value.trim()   || 'carcoloursv3';
+        const nowmTable = document.getElementById('nowm-table').value.trim() || 'carcoloursnomwv3';
+        const limit     = parseInt(document.getElementById('run-limit').value) || 10;
+        const params    = new URLSearchParams({ wm_table: wmTable, nowm_table: nowmTable, limit });
+        const res = await fetch('/api/data?' + params);
         if (!res.ok) throw new Error(await res.text());
         const json = await res.json();
         const rows = json.data;
