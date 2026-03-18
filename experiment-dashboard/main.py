@@ -31,9 +31,11 @@ def _to_run_id_prefix(iso_str: str) -> str:
     return "run_" + dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def build_run_ids_query(table: str, limit: int, from_dt: str | None = None, to_dt: str | None = None) -> str:
+def build_run_ids_query(table: str, limit: int, run_prefix: str = "", from_dt: str | None = None, to_dt: str | None = None) -> str:
     """Fast: get newest run_ids from a single table (~2s)."""
     filters = []
+    if run_prefix:
+        filters.append(f"run_id LIKE '{run_prefix}_%'")
     if from_dt and to_dt:
         from_prefix = _to_run_id_prefix(from_dt)
         to_prefix   = _to_run_id_prefix(to_dt)
@@ -52,9 +54,9 @@ SELECT
   count(nowatermarking.count) as "nowatermarking_count",
   abs(max(watermarking.count) - min(watermarking.count)) as "watermarking_diff",
   abs(max(nowatermarking.count) - min(nowatermarking.count)) as "nowatermarking_diff"
-FROM {nowm_table} as nowatermarking
-INNER JOIN {wm_table} as watermarking ON watermarking.run_id == nowatermarking.run_id
-WHERE nowatermarking.run_id IN ({ids})
+FROM {wm_table} as watermarking
+LEFT OUTER JOIN {nowm_table} as nowatermarking ON nowatermarking.run_id == watermarking.run_id
+WHERE watermarking.run_id IN ({ids})
 GROUP BY watermarking.run_id
 ORDER BY run_id DESC
 LIMIT {limit}
@@ -73,6 +75,7 @@ async def get_data(
     wm_table: str = DEFAULT_WM_TABLE,
     nowm_table: str = DEFAULT_NOWM_TABLE,
     limit: int = DEFAULT_LIMIT,
+    run_prefix: str = "",
     from_dt: str | None = None,
     to_dt: str | None = None,
 ):
@@ -82,7 +85,7 @@ async def get_data(
 
         # Phase 1: get newest run_ids from one table (~2s)
         t0 = _t.time()
-        run_ids = client.query(build_run_ids_query(nowm_table, limit * 3, from_dt, to_dt))["run_id"].tolist()
+        run_ids = client.query(build_run_ids_query(wm_table, limit, run_prefix, from_dt, to_dt))["run_id"].tolist()
         p1_ms = round((_t.time() - t0) * 1000)
 
         if not run_ids:
@@ -482,6 +485,10 @@ HTML = """<!DOCTYPE html>
       <label>Runs to display</label>
       <input type="number" id="run-limit" value="10" min="1" max="100" />
     </div>
+    <div class="control-group">
+      <label>Run ID prefix</label>
+      <input type="text" id="run-prefix" value="run" placeholder="e.g. run, exactly_once" />
+    </div>
     <div class="controls-divider"></div>
     <div class="time-range-toggle">
       <label><input type="checkbox" id="time-range-enabled" onchange="toggleTimeRange(this.checked)" /> Filter by time range</label>
@@ -726,7 +733,9 @@ HTML = """<!DOCTYPE html>
         const wmTable   = document.getElementById('wm-table').value.trim()   || 'carcoloursv3';
         const nowmTable = document.getElementById('nowm-table').value.trim() || 'carcoloursnomwv3';
         const limit     = parseInt(document.getElementById('run-limit').value) || 10;
+        const runPrefix = document.getElementById('run-prefix').value.trim();
         const p = { wm_table: wmTable, nowm_table: nowmTable, limit };
+        if (runPrefix) p.run_prefix = runPrefix;
         if (document.getElementById('time-range-enabled').checked) {
           const fromVal = document.getElementById('from-ts').value;
           const toVal   = document.getElementById('to-ts').value;
