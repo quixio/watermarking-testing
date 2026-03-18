@@ -27,9 +27,9 @@ _wm_instance = [None]
 _orig_wm_set = _wm_mod.WatermarkManager.set_topics                                                                                                                                                                                                                                                      
 _orig_wm_recv = _wm_mod.WatermarkManager.receive
 def _dbg_set_topics(self, topics):                                                                                                                                                                                                                                                                     
-_orig_wm_set(self, topics)                                                                                                                             						                                                                                                                                            
-_wm_instance[0] = self                                                                                                                                                                                                                                                                                  
-logger.info("[WM] Tracking %d TPs: %s", len(self._watermarks), ", ".join(f"{t}[{p}]" for (t, p) in sorted(self._watermarks.keys())))
+    _orig_wm_set(self, topics)                                                                                                                             						                                                                                                                                            
+    _wm_instance[0] = self                                                                                                                                                                                                                                                                                  
+    logger.info("[WM] Tracking %d TPs: %s", len(self._watermarks), ", ".join(f"{t}[{p}]" for (t, p) in sorted(self._watermarks.keys())))
 																																																																									   
 def _dbg_receive(self, message):                                                                                                                                                                                                                                                                       
   result = _orig_wm_recv(self, message)
