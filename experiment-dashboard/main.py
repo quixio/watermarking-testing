@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 
@@ -23,7 +24,25 @@ DEFAULT_NOWM_TABLE = "carcoloursnomwv3"
 DEFAULT_LIMIT      = 10
 
 
-def build_query(wm_table: str, nowm_table: str, limit: int) -> str:
+def _to_run_id_prefix(iso_str: str) -> str:
+    """Convert a datetime-local ISO string (e.g. '2024-03-17T14:30') to the
+    run_id prefix format used by the traffic generator: 'run_2024-03-17 14:30:00'."""
+    dt = datetime.fromisoformat(iso_str)
+    return "run_" + dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def build_query(
+    wm_table: str,
+    nowm_table: str,
+    limit: int,
+    from_dt: str | None = None,
+    to_dt: str | None = None,
+) -> str:
+    time_filter = ""
+    if from_dt and to_dt:
+        from_prefix = _to_run_id_prefix(from_dt)
+        to_prefix   = _to_run_id_prefix(to_dt)
+        time_filter = f"WHERE nowatermarking.run_id >= '{from_prefix}' AND nowatermarking.run_id <= '{to_prefix}'"
     return f"""
 SELECT
   watermarking.run_id,
@@ -33,6 +52,7 @@ SELECT
   abs(max(nowatermarking.count) - min(nowatermarking.count)) as "nowatermarking_diff"
 FROM {nowm_table} as nowatermarking
 LEFT OUTER JOIN {wm_table} as watermarking ON watermarking.run_id == nowatermarking.run_id
+{time_filter}
 GROUP BY watermarking.run_id
 ORDER BY run_id DESC
 LIMIT {limit}
@@ -51,10 +71,12 @@ async def get_data(
     wm_table: str = DEFAULT_WM_TABLE,
     nowm_table: str = DEFAULT_NOWM_TABLE,
     limit: int = DEFAULT_LIMIT,
+    from_dt: str | None = None,
+    to_dt: str | None = None,
 ):
     try:
         client = get_client()
-        df = client.query(build_query(wm_table, nowm_table, limit))
+        df = client.query(build_query(wm_table, nowm_table, limit, from_dt, to_dt))
         records = df.to_dict(orient="records")
         return JSONResponse(content={"data": records, "count": len(records)})
     except Exception as e:
@@ -163,6 +185,40 @@ HTML = """<!DOCTYPE html>
     }
     .control-group input:focus { border-color: var(--accent); }
     .control-group input[type=number] { width: 80px; }
+    .control-group input[type=datetime-local] { width: 190px; }
+    .control-group input:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .controls-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+      margin: 0 0.25rem;
+    }
+    .time-range-toggle {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      justify-content: flex-end;
+    }
+    .time-range-toggle label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .time-range-toggle input[type=checkbox] {
+      accent-color: var(--accent);
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
+    }
     .btn-refresh {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -369,6 +425,18 @@ HTML = """<!DOCTYPE html>
       <label>Runs to display</label>
       <input type="number" id="run-limit" value="10" min="1" max="100" />
     </div>
+    <div class="controls-divider"></div>
+    <div class="time-range-toggle">
+      <label><input type="checkbox" id="time-range-enabled" onchange="toggleTimeRange(this.checked)" /> Filter by time range</label>
+    </div>
+    <div class="control-group">
+      <label>From</label>
+      <input type="datetime-local" id="from-ts" disabled />
+    </div>
+    <div class="control-group">
+      <label>To</label>
+      <input type="datetime-local" id="to-ts" disabled />
+    </div>
   </div>
 
   <div class="legend">
@@ -420,6 +488,21 @@ HTML = """<!DOCTYPE html>
   <footer>Queries <code>carcoloursv3</code> ⋈ <code>carcoloursnomwv3</code> · last 10 runs</footer>
 
   <script>
+    function toggleTimeRange(enabled) {
+      document.getElementById('from-ts').disabled = !enabled;
+      document.getElementById('to-ts').disabled   = !enabled;
+    }
+
+    // Pre-fill time range with today 00:00 → now
+    (function() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const sod = new Date(now); sod.setHours(0, 0, 0, 0);
+      document.getElementById('from-ts').value = fmt(sod);
+      document.getElementById('to-ts').value   = fmt(now);
+    })();
+
     let prevRunIds = [];
     let maxDiff = 1;
     let diffChart = null;
@@ -566,7 +649,14 @@ HTML = """<!DOCTYPE html>
         const wmTable   = document.getElementById('wm-table').value.trim()   || 'carcoloursv3';
         const nowmTable = document.getElementById('nowm-table').value.trim() || 'carcoloursnomwv3';
         const limit     = parseInt(document.getElementById('run-limit').value) || 10;
-        const params    = new URLSearchParams({ wm_table: wmTable, nowm_table: nowmTable, limit });
+        const p = { wm_table: wmTable, nowm_table: nowmTable, limit };
+        if (document.getElementById('time-range-enabled').checked) {
+          const fromVal = document.getElementById('from-ts').value;
+          const toVal   = document.getElementById('to-ts').value;
+          if (fromVal) p.from_dt = fromVal;
+          if (toVal)   p.to_dt   = toVal;
+        }
+        const params = new URLSearchParams(p);
         const res = await fetch('/api/data?' + params);
         if (!res.ok) throw new Error(await res.text());
         const json = await res.json();
