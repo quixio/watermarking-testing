@@ -31,7 +31,7 @@ def main():
         commit_interval=10,
         watermarks_reset_on_start=True,
         watermarks_idle_partition_timeout=2.0,
-        watermarks_idle_advance_after_ms=10_000,
+        watermarks_idle_advance_after_ms=50_000,
     )
 
     input_topic = app.topic(
