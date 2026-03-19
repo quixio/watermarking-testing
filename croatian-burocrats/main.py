@@ -12,38 +12,8 @@ from quixstreams.dataframe.windows import Count, First
 
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
-load_dotenv()
-
-# -- Watermark debug instrumentation --------------------------------------                                                                                                                                                                                                                            
-import quixstreams.processing.watermarking as _wm_mod
-
-_wm_instance = [None]
-_orig_wm_set = _wm_mod.WatermarkManager.set_topics_orig_wm_recv = _wm_mod.WatermarkManager.receive
-
-   
-def _dbg_receive(self, message):
-	result = _orig_wm_recv(self, message)
-	if result is not None:
-		print("[WM] ADVANCED -> %d ms  (tp=%s[%d])", result, message["topic"], message["partition"])
-	else:  
-		stuck = [(t, p) for (t, p), v in self._watermarks.items() if v == -1]  
-	if stuck:  
-		print("[WM] STUCK at -1: %s", stuck)
-	return result  
-
-_wm_mod.WatermarkManager.receive = _dbg_receive
-_last_wm_dump = [0.0]
-def _wm_dump(value):
-    now = time.monotonic()
-    if now - _last_wm_dump[0] >= 30.0:
-        _last_wm_dump[0] = now
-    if _wm_instance[0] is not None:
-        rows = sorted(_wm_instance[0]._watermarks.items())
-        print("[WM] dump:\n%s", "\n".join(f"  {'STUCK' if v == -1 else '     '} {t}[{p}] = {v}" for (t, p), v in rows), flush=True)
-    return value     
-# -- end instrumentation --------------------------------------------------                                                                                                                                                                                                                         
+load_dotenv()                                                                                                                                                                                                                  
                                                                                      
-
 def main():
     # Use the message's own "ts" field (epoch ms) as the event timestamp.
     # This ensures windowing is driven by event time, not Kafka broker time.
@@ -58,7 +28,10 @@ def main():
         auto_offset_reset="earliest",
         processing_guarantee="exactly-once",
         commit_every=1000,
-        commit_interval=10
+        commit_interval=10,
+        watermarks_reset_on_start=True,
+        watermarks_idle_partition_timeout=30.0,
+        watermarks_idle_advance_after_ms=20_000,
     )
 
     input_topic = app.topic(
@@ -71,8 +44,6 @@ def main():
     sdf = app.dataframe(topic=input_topic)
 
     sdf = sdf[sdf.contains("run_id")]
-
-    sdf = sdf.apply(_wm_dump)  
 
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
     sdf = sdf.group_by("colour")
