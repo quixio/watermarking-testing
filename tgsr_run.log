@@ -1,0 +1,19 @@
+ Container watermarkingtest-traffic_generator_singlerun-run-75ee4f83e2ea Creating 
+ Container watermarkingtest-traffic_generator_singlerun-run-75ee4f83e2ea Created 
+[2026-03-19 16:21:16,588] [INFO] [quixstreams] : Starting the Application with the config: broker_address="{'bootstrap.servers': 'kafka_broker:9092'}" consumer_group="traffic_generator" auto_offset_reset="latest" commit_interval=5.0s commit_every=0 processing_guarantee="at-least-once"
+[2026-03-19 16:21:16,588] [INFO] [quixstreams] : Initializing state directory at "/app/state/traffic_generator"
+[2026-03-19 16:21:16,589] [INFO] [quixstreams] : Starting source vehicle-traffic-producer
+[2026-03-19 16:21:16,963] [INFO] [vehicle-traffic-producer] [18] : Starting source
+[2026-03-19 16:21:16,963] [INFO] [vehicle-traffic-producer] [18] : Source started
+[2026-03-19 16:21:16,963] [INFO] [vehicle-traffic-producer] [18] : CONNECTED!
+Generating 500 message(s) per (brand, colour) pair — 200,000 messages/sec
+run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo
+Will run for 10s then stop.
+Produced second 1/10 (2026-03-19T17:21:16+01:00) — messages this second: 200,000, total sent: 200,000, run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo, generation took: 1.291s
+Produced second 2/10 (2026-03-19T17:21:18+01:00) — messages this second: 200,000, total sent: 400,000, run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo, generation took: 1.158s
+Produced second 3/10 (2026-03-19T17:21:19+01:00) — messages this second: 200,000, total sent: 600,000, run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo, generation took: 1.120s
+Produced second 4/10 (2026-03-19T17:21:20+01:00) — messages this second: 200,000, total sent: 800,000, run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo, generation took: 0.922s
+[2026-03-19 16:21:22,594] [INFO] [quixstreams] : Stopping source vehicle-traffic-producer
+Produced second 5/10 (2026-03-19T17:21:21+01:00) — messages this second: 200,000, total sent: 1,000,000, run_id=run_2026-03-19 17:21:16.963382+01:00updatedWMAlgo, generation took: 1.169s
+Stopped. Total messages sent: 1,000,000
+[2026-03-19 16:21:22,703] [INFO] [vehicle-traffic-producer] [18] : Source completed

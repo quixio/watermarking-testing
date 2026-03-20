@@ -1,0 +1,87 @@
+there is scenario I want you to test on this local build.
+Do you have access to RedPanda?
+So scenario is that Croatian burecrat further as CR and Croatian burecrat noWatermarks as CBNWM.
+
+There is test to do not run servises of CB and CBNWM.
+Run the Traffic Generator SingleRun as TGSR
+Thre should be data in topic highway-2
+then run CB and CBNWM, it should start processing and outputting the data.
+Seems CB is waititng for some partition sychronization.
+Possible flush of data with another TGSR is possibly needed to propagate data to ReedPanda
+Can you confirm there is some data processed by CBNWM and no data proceed by CB
+Can you confirm? 
+
+
+
+❯ hello, can you pelase read this document https://quix.io/docs/get-started/welcome.html#typical-workflow 
+  and this quix streams library C:\repos\quix-streams_4a4 and give me information like for 12years old how does watermarking work when GROUPBY function is used. 
+   
+  Main points 
+  if there is some data in kafka topic already, how will watermark topic looks like. 
+  
+  I need to achieve taht if there is already data in kafka topic on input. GROUPBY function should proceed them. All of them. Do not loose any messages.
+  Also should work normaly in oline streaming topic mode.
+  Tehre is a setting for applciation to send data exactly-once. Is it possible to proceed all data with this setting.
+  Please try to run a test in watermarking environment. Using docker and kafka broker to do a test.
+  Use Traffic Generator Single Run(TGSR) to produce data, when Croatian Burocrat(CB) and Croatian Burocrat No WaterMarks(CBNWM) servises are off.
+  Then run the servises and collect the data using Redpanda.
+  At the end output should be 200 counts with total 2M messages in it.
+  Sum of counts processed by CB and CBNWM should be plot in simple table.
+  Expecatiton is CB will proceed all emssages, for CBNMW it is possible some will be lost.
+  So test input must be designwed in a way watermarks are needed to GROUPBY the data. but for CBNMW some of them will be skipped because came too late.
+  
+  
+  Test 1
+  Precodndition:
+  topics are cleaned
+  CB and CBNWM is off
+  Description:
+  run TGSR
+  after it finishes
+  run CB and CBNMW
+  after it finishes
+  run TGSR
+  check the sum of counts in colours and colours-nwm topics
+  put in table amount of messages and this sum
+  
+  
+  Test 2
+   Precodndition:
+  topics are cleaned
+  CB and CBNWM is off
+  Description:
+  run TGSR
+  after it finishes
+  run TGSR
+  after it finishes
+  run TGSR
+  after it finishes
+  run CB and CBNMW
+  after it finishes
+  check the sum of counts in colours and colours-nwm topics for first two runs.
+  soemtimes CB is stucka fter processing first batch
+  check if allthe data from all three attemps were proceeded
+  
+  
+  Test 3
+   Precodndition:
+  topics are cleaned
+  CB and CBNWM are on
+  
+  Description
+  run TGSR twice
+  see the result, all messages should be processed with watermarking version
+  
+  
+  Test 4
+  precondition:
+  CB is on, CBNWM is on
+  Start Traffic generator (Continues one)
+  see if CB and CBNWM starts producing data
+  
+  
+  
+  Test 5
+  generate dataset for TGRS proving without watermarks some messages are trashed but watermarked one are complete
+  
+  

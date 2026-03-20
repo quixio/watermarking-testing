@@ -55,7 +55,7 @@ deployments:
         value: colours
       - name: consumer_group
         inputType: FreeText
-        value: {{consumer_group}}
+        value: "{{consumer_group}}"
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest
@@ -91,7 +91,7 @@ deployments:
         description: If using a catalog, the respective auth token to access it
         secretKey: pat
       - name: AUTO_DISCOVER
-        inputType: Options
+        inputType: FreeText
         description: Automatically register table in REST Catalog on first write
         value: true
       - name: CATALOG_NAMESPACE
@@ -119,11 +119,11 @@ deployments:
         description: Kafka consumer group name
         value: s3_direct_sink_v1.0
       - name: AUTO_OFFSET_RESET
-        inputType: Options
+        inputType: FreeText
         description: Where to start consuming if no offset exists
         value: earliest
       - name: LOGLEVEL
-        inputType: Options
+        inputType: FreeText
         description: Application logging level
         value: INFO
       - name: MAX_WRITE_WORKERS
@@ -154,7 +154,7 @@ deployments:
         value: coloursNoWM
       - name: consumer_group
         inputType: FreeText
-        value: {{consumer_group}}
+        value: "{{consumer_group}}"
   - name: CarColoursDataLakeNoWM
     application: carcoloursdatalakenowm
     version: latest
@@ -190,7 +190,7 @@ deployments:
         description: If using a catalog, the respective auth token to access it
         secretKey: pat
       - name: AUTO_DISCOVER
-        inputType: Options
+        inputType: FreeText
         description: Automatically register table in REST Catalog on first write
         value: true
       - name: CATALOG_NAMESPACE
@@ -218,11 +218,11 @@ deployments:
         description: Kafka consumer group name
         value: s3_direct_sink_v1.1
       - name: AUTO_OFFSET_RESET
-        inputType: Options
+        inputType: FreeText
         description: Where to start consuming if no offset exists
         value: earliest
       - name: LOGLEVEL
-        inputType: Options
+        inputType: FreeText
         description: Application logging level
         value: INFO
       - name: MAX_WRITE_WORKERS
@@ -251,7 +251,7 @@ deployments:
           targetPort: 8080
     variables:
       - name: MARIMO_MODE
-        inputType: Options
+        inputType: FreeText
         description: Mode to run Marimo in
         value: edit
       - name: MARIMO_NOTEBOOK
@@ -337,7 +337,7 @@ deployments:
         description: If using a catalog, the respective auth token to access it
         secretKey: pat
       - name: AUTO_DISCOVER
-        inputType: Options
+        inputType: FreeText
         description: Automatically register table in REST Catalog on first write
         value: true
       - name: CATALOG_NAMESPACE
@@ -365,11 +365,11 @@ deployments:
         description: Kafka consumer group name
         value: s3_direct_sink_v1.0
       - name: AUTO_OFFSET_RESET
-        inputType: Options
+        inputType: FreeText
         description: Where to start consuming if no offset exists
         value: earliest
       - name: LOGLEVEL
-        inputType: Options
+        inputType: FreeText
         description: Application logging level
         value: INFO
       - name: MAX_WRITE_WORKERS

@@ -25,11 +25,11 @@ variables:
   - name: CATALOG_AUTH_TOKEN
     inputType: Secret
     description: If using a catalog, the respective auth token to access it
-    defaultValue: pat
+    secretKey: pat
   - name: AUTO_DISCOVER
-    inputType: Options
+    inputType: FreeText
     description: Automatically register table in REST Catalog on first write
-    defaultValue: true
+    defaultValue: "true"
   - name: CATALOG_NAMESPACE
     inputType: FreeText
     description: Catalog namespace for table registration
@@ -55,11 +55,11 @@ variables:
     description: Kafka consumer group name
     defaultValue: s3_direct_sink_v1.0
   - name: AUTO_OFFSET_RESET
-    inputType: Options
+    inputType: FreeText
     description: Where to start consuming if no offset exists
     defaultValue: earliest
   - name: LOGLEVEL
-    inputType: Options
+    inputType: FreeText
     description: Application logging level
     defaultValue: INFO
   - name: MAX_WRITE_WORKERS

@@ -21,7 +21,16 @@ RUN pip install --no-cache-dir -r "${MAINAPPPATH}/requirements.txt"
 
 # Copy entire application into container
 COPY . .
-			
+
+# Apply local patches over the installed quixstreams
+RUN SITE=$(python3 -c "import quixstreams.internal_consumer as m; import os; print(os.path.dirname(m.__file__))") && \
+    cp "${MAINAPPPATH}/patch_buffering.py" "$SITE/buffering.py" && \
+    cp "${MAINAPPPATH}/patch_consumer.py" "$SITE/consumer.py" && \
+    MSITE=$(python3 -c "import quixstreams.models.topics.manager as m; import os; print(os.path.dirname(m.__file__))") && \
+    cp "${MAINAPPPATH}/patch_manager.py" "$MSITE/manager.py" && \
+    WMSITE=$(python3 -c "import quixstreams.processing.watermarking as m; import os; print(os.path.dirname(m.__file__))") && \
+    cp "${MAINAPPPATH}/patch_watermarking.py" "$WMSITE/watermarking.py"
+
 # Set working directory to main app path
 WORKDIR "/app/${MAINAPPPATH}"
 			

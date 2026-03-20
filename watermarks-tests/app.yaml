@@ -2,7 +2,7 @@ name: watermarks-tests
 language: docker
 variables:
   - name: MARIMO_MODE
-    inputType: Options
+    inputType: FreeText
     description: Mode to run Marimo in
     defaultValue: edit
   - name: MARIMO_NOTEBOOK
@@ -12,11 +12,11 @@ variables:
   - name: ANTHROPIC_API_KEY
     inputType: Secret
     description: Token generated from https://platform.claude.com/settings/keys.
-    defaultValue: pat
+    secretKey: CLAUDE_TOKEN
   - name: QUIX_LAKE_TOKEN
     inputType: Secret
     multiline: false
-    defaultValue: pat
+    secretKey: pat
     required: true
 dockerfile: dockerfile
 defaultFile: dockerfile
