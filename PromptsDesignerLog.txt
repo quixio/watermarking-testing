@@ -31,6 +31,11 @@ Can you confirm?
   So test input must be designwed in a way watermarks are needed to GROUPBY the data. but for CBNMW some of them will be skipped because came too late.
   
   
+  TGSR = traffic-generator-2
+  TGCon = traffic-generator
+  Croatian Burocrat(CB)
+  Croatian Burocrat No WaterMarks(CBNWM)
+  
   Test 1
   Precodndition:
   topics are cleaned
@@ -76,7 +81,7 @@ Can you confirm?
   Test 4
   precondition:
   CB is on, CBNWM is on
-  Start Traffic generator (Continues one)
+  Start Traffic generator (Continues one traffic-generator without any number
   see if CB and CBNWM starts producing data
   
   
@@ -85,3 +90,65 @@ Can you confirm?
   generate dataset for TGRS proving without watermarks some messages are trashed but watermarked one are complete
   
   
+  
+  check the watermarking feature
+  if there is data in kafka topic present before servise is running. Create watermakrs for all of them that it can be groupby by function call
+  if there is a online stream of mutiple partition, every message should be watermarked to be groupby in same time window.
+  Use kafka idle function to detect data.
+  Watermark should ahve one partition.
+  highway-2 should ahve 2 partitions and Cb and CBNWM should have 4 replicas
+  there are few test written you can use. test localy in docker and check logs of red panda.
+  CBNWM needs another flush of data to propagate data to log
+  
+  load C:\repos\quix-streams_4a4
+  
+  Test 1
+  Precodndition:
+  topics are cleaned
+  CB and CBNWM is off
+  Description:
+  run TGSR
+  after it finishes
+  run CB and CBNMW
+  after it finishes
+  run TGSR
+  check the sum of counts in colours and colours-nwm topics
+  put in table amount of messages and this sum
+  
+  
+  Test 2
+   Precodndition:
+  topics are cleaned
+  CB and CBNWM is off
+  Description:
+  run TGSR
+  after it finishes
+  run TGSR
+  after it finishes
+  run TGSR
+  after it finishes
+  run CB and CBNMW
+  after it finishes
+  check the sum of counts in colours and colours-nwm topics for first two runs.
+  soemtimes CB is stucka fter processing first batch
+  check if allthe data from all three attemps were proceeded
+  
+  
+  Test 3
+   Precodndition:
+  topics are cleaned
+  CB and CBNWM are on
+  
+  Description
+  run TGSR twice
+  see the result, all messages should be processed with watermarking version
+  
+  
+  Test 4
+  precondition:
+  CB is on, CBNWM is on
+  Start Traffic generator (Continues one traffic-generator without any number
+  see if CB and CBNWM starts producing data
+  
+  
+  use /update-config to allow bash and python commands only in C:\repos\WatermarkingTest and C:\repos\quix-streams_4a4, and block git commit
