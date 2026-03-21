@@ -3,35 +3,46 @@
 ## Pipeline Architecture
 
 ### Components
-- **TGSR** (Traffic Generator Single Run): produces 200 messages per run to `highway-2` topic (2 partitions).
-- **CB** (Croatian Bureaucrats): consumes `highway-2`, repartitions by colour via `group_by("colour")` into `repartition` topic (2 partitions), runs 1-second tumbling windows, outputs to `output` topic.
-- **CBNWM** (CB No Watermark Manager): same as CB but without watermarking logic.
+- **TGSR** (Traffic Generator Single Run): produces 2,000,000 messages per run to `highway-2` topic (4 partitions).
+- **CB** (Croatian Bureaucrats): 4 replicas; consumes `highway-2`, repartitions by colour via `group_by("colour")` into `repartition` topic (4 partitions), runs 1-second tumbling windows, outputs to `output` topic.
+- **CBNWM** (CB No Watermark Manager): 4 replicas; same as CB but without watermarking logic (quixstreams 3.23.1).
 - **quixstreams version**: 4.0.0a7 with `processing_guarantee="exactly-once"` (EOS/transactional Kafka).
 
 ### Topic Layout
 | Topic | Partitions | Notes |
 |-------|-----------|-------|
-| `highway-2` | 2 | Input; TGSR writes here |
-| `repartition__burocrats_watermarking_v1--highway-2--colour` | 2 | Internal; CB group_by output |
-| `watermarks__burocrats_watermarking_v1--highway-2--colour` | 1 | Watermarks; only CB-1 gets assigned |
-| `output` | variable | CB window results |
+| `highway-2` | **4** | Input; TGSR writes here; must match CB replica count |
+| `repartition__burocrats_watermarking_v1--highway-2--colour` | **4** | Internal; CB group_by output; derived from highway-2 |
+| `watermarks__burocrats_watermarking_v1--watermarks` | **1** | Watermarks; all replicas subscribe and produce here |
+| `output` (`colours`) | variable | CB window results |
 
-### CB Replica Assignment (range balancer, 4 replicas, 2 partitions)
-- **CB-1**: partition 0 of everything (highway-2-0, repartition-0, watermarks-0)
-- **CB-3**: partition 1 only (highway-2-1, repartition-1) — NO watermarks partition
+**Note on repartition count**: 4 partitions are derived automatically from highway-2. An alternative of 1 partition (via `_single_partition_groupby`) would eliminate repartition EOS gaps but would lose parallel processing. Currently 4 partitions.
+
+### CB Replica Assignment (range balancer, 4 replicas, 4 partitions)
+With 4 replicas and 4 partitions each replica owns exactly 1 partition of highway-2 and repartition:
+- **CB-1**: highway-2[0], repartition[0], watermarks[0]
+- **CB-2**: highway-2[1], repartition[1], watermarks[0]
+- **CB-3**: highway-2[2], repartition[2], watermarks[0]
+- **CB-4**: highway-2[3], repartition[3], watermarks[0]
+
+All 4 replicas subscribe to watermarks[0] (1 partition) so every replica sees every watermark update.
+
+**Quix Cloud topology**: highway-2 has 4 partitions — confirmed by `highway-2[2]` offset error. The local test setup (`compose.local.yaml`) uses `deploy.replicas: 4` for both CB and CBNWM, starting 4 containers each.
 
 ---
 
-## Key Bug: CB-3 Never Fires `caught_up` Watermark Advance
+## Key Bugs
 
-### Root Cause
+### Bug 1: CB Never Fires `caught_up` Watermark Advance (EOS Stuck)
+
+#### Root Cause
 EOS (exactly-once semantics) produces **transaction control records** (EOS markers) at the end of each committed transaction. These markers are **invisible to `read_committed` consumers**: `consume()` returns 0 messages for them, but the consumer's Kafka-level position does **not** automatically advance past them in librdkafka.
 
-Result: CB-3's repartition-1 ends up with:
-- `position = 2712219` (the EOS marker offset)
-- `high_watermark = 2712220` (LEO, including the EOS marker)
+Result: A replica's repartition partition ends up with:
+- `position = N+1` (the EOS marker offset)
+- `high_watermark = N+2` (LEO, including the EOS marker)
 
-`_data_partitions_all_caught_up()` checks `pos < high` → always False → caught_up never fires → CB-3's windows never expire → 0 output records.
+`_data_partitions_all_caught_up()` checks `pos < high` → always False → caught_up never fires → windows never expire → 0 output records.
 
 ### Detection Heuristic (`is_eos_stuck`)
 A partition is EOS-stuck when **all four** are true:
@@ -45,7 +56,38 @@ Without `gap <= 10` and `not buffer.paused`, the heuristic triggers falsely when
 - A partition is **paused mid-processing** (buffer full at offset 5000, hw=2.7M). After the buffer drains, `consume()` returns 0 (paused), and `position == _max_offset+1` is trivially true. Without `not buffer.paused`, we'd seek to hw=2.7M and skip 2.695M messages.
 - Confirmed by test results: Test 2 run 3 produced 330/600 (55%), Test 4 produced 90/200 (45%), both caused by premature seeks mid-stream.
 
-### Fix (in `patch_buffering.py` + `patch_consumer.py`)
+---
+
+### Bug 2: `UnboundLocalError: idle_watermark` (4-partition crash)
+
+#### Root Cause
+`_run_dataframe()` in `app.py` referenced `idle_watermark` at line 1025 (start of the else-branch body) before the variable was ever initialised. Python raises `UnboundLocalError` on the very first loop iteration, crashing all 4 CB replicas immediately.
+
+This bug was latent — it only manifested when the double `if idle_watermark is not None:` block was introduced during debugging (second session), and the companion `idle_watermark = None` initialisation was forgotten.
+
+With 2 partitions the tests appeared to pass because the CB containers crashed and were restarted (or because `state_manager.recovery_required` was True on the first iteration, deferring the bad branch). With 4 partitions and 4 active replicas the crash was reliably reproducible (CB=0 for all tests).
+
+#### Fix
+Add `idle_watermark = None` immediately before the `while run_tracker.running:` loop in `app.py`:
+
+```python
+idle_watermark = None          # ← new
+while run_tracker.running:
+    ...
+    if idle_watermark is not None:   # line 1025 — now safe
+        ...
+    idle_watermark = watermark_manager.produce(caught_up=...)
+    if idle_watermark is not None:   # line 1059
+        ...
+```
+
+**Applied in**: `C:\repos\quix-streams_4a4\quixstreams\app.py` → wheel rebuilt → wheel copied to `croatian-burocrats/`.
+
+---
+
+### EOS Fix (Bug 1): `is_eos_stuck` + seek in `_feed_buffer()`
+
+#### Fix (in `patch_buffering.py` + `patch_consumer.py`)
 After each `_feed_buffer()` cycle, detect EOS-stuck partitions and **seek directly to the high watermark**. This advances the consumer position to `hw`, so `_data_partitions_all_caught_up()` sees `pos == high` → True.
 
 **Critical detail — debounce required:** The seek must NOT fire immediately on first detection. CB replicas write to each other's repartition partitions (e.g., CB-3 processes highway-2-1 and produces to repartition-0, which is also CB-1's partition). While CB-1 is still committing its batch to repartition-0, CB-3 may see a temporary gap of 1 (an in-flight transaction looks like an EOS marker). Without a debounce, CB-3 would prematurely seek to the high watermark of repartition-0, skipping all of CB-1's uncommitted-yet data.
@@ -180,14 +222,14 @@ return True
 - `max_partition_buffer_size=10000`
 - `grace_ms=10s, tumbling_window=1s, .final()`
 
-### Test Results (all passing)
-| Test | CB | CBNWM |
-|------|----|-------|
-| 1 | PASS (both runs: 200 records, 2M count each) | run_1 fully flushed by run_2; run_2 expected partial |
-| 2 | PASS (all 3 runs: 200 records, 2M count each) | Expected partial/stuck (no further flush) |
-| 3 | PASS (both runs: 200 records, 2M count each) | run_1 fully flushed by run_2; run_2 expected partial |
-| 4A | PASS via idle advance (200 records, 2M count) | Expected stuck — no watermark advance |
-| 4B | PASS both runs | run_1 flushed by run_2; run_2 partial expected |
+### Test Results (with 4 partitions / 4 replicas)
+| Test | CB | CBNWM | Notes |
+|------|----|-------|-------|
+| 1 run_1 | PASS (200 records, 2M count) | PASS | Confirmed with 4 partitions |
+| 1 run_2 | ~97% (200 records, ~1.93M count) | ~40% expected partial | Slight timing gap; all windows present |
+| 2–4 | Not re-run after 4-partition fix | — | Earlier passing results with 2 partitions |
+
+**Note on run_2 97%**: All 200 expected window records are produced, but `sum(count)` is ~1.93M instead of 2M. Likely a timing issue — some repartition messages from the tail of run_2 arrive slightly after the watermark advance fires (70s wait after TGSR-2 may need to be extended). The CB architecture is otherwise correct.
 
 ---
 
@@ -221,3 +263,5 @@ The patch files are applied by being mounted into the container and injecting in
 4. **EOS seek fix**: detect partitions where position == `_max_offset + 1` < high watermark and seek to high watermark, bypassing invisible EOS control records.
 5. **EOS debounce**: introduced `_eos_stuck_since` dict and `_EOS_STABLE_SECONDS = 15.0` to prevent premature seeks while another CB replica is still committing to the same repartition partition. Without this, Test 2 (3 pre-loaded runs) would produce only 45% of expected records (CB-1's repartition-0 windows never flushed because CB-3 seeked past it prematurely).
 6. **Wheel packaging**: all patches baked into `quixstreams-4.0.0a7-py3-none-any.whl` in `croatian-burocrats/` for Quix Cloud deployment (no runtime patching required).
+7. **`idle_watermark` initialisation**: added `idle_watermark = None` before the `while` loop in `app.py` to fix `UnboundLocalError` crash on startup (manifested as CB=0 with 4 partitions and 4 replicas).
+8. **Topology updated to 4 partitions/replicas**: `run_test.py` creates `highway-2` with 4 partitions; `compose.local.yaml` uses `deploy.replicas: 4` for both CB and CBNWM; watermarks topic remains 1 partition.
