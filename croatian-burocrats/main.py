@@ -1,12 +1,10 @@
 # import the Quix Streams modules for interacting with Kafka.
 # For general info, see https://quix.io/docs/quix-streams/introduction.html
 from datetime import timedelta
-from pathlib import Path
 from quixstreams import Application
 
 import os
 import logging
-import shutil
 import threading
 import time
 from collections import defaultdict
@@ -16,40 +14,16 @@ from quixstreams.dataframe.windows import Count, First
 from dotenv import load_dotenv
 load_dotenv()
 
-
-def clear_state_if_requested(consumer_group: str):
-    """
-    Delete the RocksDB state directory so that latest_expired_window_end
-    resets to 0 and replayed data is not classified as "late".
-
-    Controlled by CLEAR_STATE env var:
-      "true"  — always clear state on startup
-      "false" / unset — keep state (default)
-    """
-    if os.environ.get("CLEAR_STATE", "").lower() != "true":
-        return
-
-    state_dir = Path("/app/state") / consumer_group
-    if state_dir.exists():
-        print(f"[STARTUP] CLEAR_STATE=true — deleting state directory: {state_dir}", flush=True)
-        shutil.rmtree(state_dir)
-    else:
-        print(f"[STARTUP] CLEAR_STATE=true — no state directory to delete: {state_dir}", flush=True)
-
-
 def main():
     # Use the message's own "ts" field (epoch ms) as the event timestamp.
     # This ensures windowing is driven by event time, not Kafka broker time.
     def ts_extractor(value, _headers, _timestamp, _timestamp_type) -> int:
         return value["ts"]
 
-    consumer_group = "burocrats_watermarking_" + os.environ["consumer_group"]
-    clear_state_if_requested(consumer_group)
-
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group=consumer_group,
+        consumer_group="burocrats_watermarking_" + os.environ["consumer_group"],
         auto_create_topics=True,
         auto_offset_reset="earliest",
         processing_guarantee="exactly-once",
@@ -88,11 +62,11 @@ def main():
     )
 
     sdf.print_table()
-    
+
     sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
-    print("[STARTUP] calling app.run()", flush=True)  
+    print("[STARTUP] calling app.run()", flush=True)
     app.run()
 
 
