@@ -22,8 +22,8 @@ def clear_state_if_requested():
     Delete ALL contents of /app/state/ so that latest_expired_window_end
     resets to 0 and replayed data is not classified as "late".
 
-    Wipes the entire state directory rather than guessing the consumer group
-    subdirectory name (which Quix Cloud prefixes with the environment name).
+    Uses ignore_errors=True to handle race conditions when multiple
+    replicas attempt to clear the same shared state volume simultaneously.
 
     Controlled by CLEAR_STATE env var:
       "true"  — always clear state on startup
@@ -33,20 +33,9 @@ def clear_state_if_requested():
         return
 
     state_dir = Path("/app/state")
-    if state_dir.exists():
-        entries = list(state_dir.iterdir())
-        if entries:
-            print(f"[STARTUP] CLEAR_STATE=true — deleting {len(entries)} entries in {state_dir}: "
-                  f"{[e.name for e in entries]}", flush=True)
-            for entry in entries:
-                if entry.is_dir():
-                    shutil.rmtree(entry)
-                else:
-                    entry.unlink()
-        else:
-            print(f"[STARTUP] CLEAR_STATE=true — state directory empty: {state_dir}", flush=True)
-    else:
-        print(f"[STARTUP] CLEAR_STATE=true — no state directory: {state_dir}", flush=True)
+    print(f"[STARTUP] CLEAR_STATE=true — wiping {state_dir}", flush=True)
+    shutil.rmtree(state_dir, ignore_errors=True)
+    state_dir.mkdir(parents=True, exist_ok=True)
 
 
 def main():
@@ -56,6 +45,10 @@ def main():
         return value["ts"]
 
     consumer_group = "burocrats_watermarking_" + os.environ["consumer_group"]
+
+    # Clear stale RocksDB state BEFORE Application init.
+    # Must happen first so Application() can recreate a fresh state directory.
+    clear_state_if_requested()
 
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
@@ -71,11 +64,6 @@ def main():
         watermarks_idle_partition_timeout=30.0,
         watermarks_idle_advance_after_ms=30000,
     )
-
-    # Clear state AFTER Application init (which creates the state directory).
-    # This removes stale RocksDB data (latest_expired_window_end) that would
-    # cause replayed data to be classified as "late" after a redeploy.
-    clear_state_if_requested()
 
     input_topic = app.topic(
         name=os.environ["input"],
