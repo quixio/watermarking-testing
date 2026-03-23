@@ -180,6 +180,7 @@ app = Application(
 | `idle_watermark` unset | `UnboundLocalError` crash on startup, CB=0 | `idle_watermark = None` before `while` loop in `app.py` |
 | Watermarks topic N partitions | Replicas without `watermarks[0]` never receive watermark updates | `manager.py` forces watermarks topic to 1 partition |
 | Non-blocking watermarks buffer | Watermarks partition blocks data `pop()` when empty | `buffering.py` marks watermarks partition `non_blocking=True` |
+| Stale state + offset reset | After redeploy, all replayed data classified as "late" → 0 output | Clear state on redeploy, or use `auto_offset_reset="latest"` |
 
 ## Quix Cloud — "few messages in colours"
 

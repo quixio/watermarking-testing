@@ -55,6 +55,10 @@ deployments:
       - name: consumer_group
         inputType: FreeText
         value: "{{consumer_group}}"
+      - name: CLEAR_STATE
+        inputType: FreeText
+        description: Set to "true" to delete RocksDB state on startup (fixes stale window expiry after redeploy)
+        value: "true"
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest

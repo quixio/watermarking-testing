@@ -236,6 +236,56 @@ return True
 
 ---
 
+## Bug 3: Stale State + Offset Reset = All Data Classified as Late (Quix Cloud)
+
+### Symptom
+After redeploying CB in Quix Cloud with continuous TGCon running, `colours` topic receives **zero** new records. CB logs show tens of thousands of:
+```
+Skipping record processing for the closed window. timestamp_ms=2026-03-21 18:49:46 ... late_by=317936ms
+```
+
+### Root Cause
+The combination of **persistent state store** + **consumer offset reset** creates a dead-end:
+
+1. CB runs, processes data up to timestamp T. State store records `latest_expired_window_end = T - grace_ms`.
+2. CB restarts (redeploy, crash, pod eviction).
+3. Consumer's stored offset (e.g. 28M) has been deleted by Kafka topic retention → `Broker: Offset out of range`.
+4. Consumer resets to BEGINNING (`auto_offset_reset="earliest"`).
+5. CB replays old repartition messages (timestamps from days ago).
+6. State store's `latest_expired_window_end` is still at T — **all replayed messages are "late"** and skipped.
+7. CB churns through millions of old messages logging "Skipping record processing" but never emits output.
+8. Eventually CB might reach new data (timestamps > T), but with millions of old messages to skip first, it's killed by Kubernetes or brokers disconnect before it gets there.
+
+### Why `latest_expired_window_end` is a one-way ratchet
+In `process_window()`:
+```python
+latest_expired_window_end = transaction.get_latest_expired(prefix=b"")
+latest_timestamp = max(ts_for_expiry, latest_expired_window_end)
+max_expired_window_start = latest_timestamp - grace_ms - duration_ms
+if start <= max_expired_window_start:
+    # SKIP — window is already closed
+```
+`latest_expired_window_end` only ever increases. It never resets on restart because the state store (RocksDB) persists across pod restarts.
+
+### Why Test 2 Works but Continuous Streaming Doesn't
+- **Test 2 (pre-loaded, fresh start)**: `docker compose down -v` wipes state volumes → `latest_expired_window_end = 0` → no data is "late".
+- **Continuous streaming (Quix Cloud redeploy)**: State persists → old `latest_expired_window_end` → replayed data all classified as late → zero output.
+
+### Fix Options
+| Option | Tradeoff |
+|--------|----------|
+| `auto_offset_reset="latest"` | Skips old data, only processes new messages. Good for continuous streaming but loses data produced during downtime. |
+| Clear state on redeploy | Wipe `/app/state/` before starting. Replay works but reprocesses everything from the beginning. |
+| Both (`latest` + clear state) | Clean start from current data. Best for continuous streaming. |
+
+### Evidence
+From `Croatian Burocrats(1).log` (Quix Cloud, 2026-03-23):
+- Line 6: `offset reset (at offset 28130787) to offset BEGINNING`
+- Lines 10–39753: 39,744 consecutive "Skipping record processing for the closed window" — all timestamps from March 21
+- Zero watermark processing, zero window expiry, zero output
+
+---
+
 ## EOS / Exactly-Once Kafka Notes
 
 - **EOS markers** (transaction END_TXN records) appear at the end of each committed transaction. Under `read_committed` isolation, they are **filtered client-side** — not returned by `consume()`.
