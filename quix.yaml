@@ -281,8 +281,8 @@ deployments:
     version: latest
     deploymentType: Job
     resources:
-      cpu: 4000
-      memory: 5800
+      cpu: 1000
+      memory: 4500
       replicas: 1
     variables:
       - name: output
