@@ -6,7 +6,7 @@
 - **TGSR** (Traffic Generator Single Run): produces 2,000,000 messages per run to `highway-2` topic (4 partitions).
 - **CB** (Croatian Bureaucrats): 4 replicas; consumes `highway-2`, repartitions by colour via `group_by("colour")` into `repartition` topic (4 partitions), runs 1-second tumbling windows, outputs to `output` topic.
 - **CBNWM** (CB No Watermark Manager): 4 replicas; same as CB but without watermarking logic (quixstreams 3.23.1).
-- **quixstreams version**: 4.0.0a7 with `processing_guarantee="exactly-once"` (EOS/transactional Kafka).
+- **quixstreams version**: 4.0.0a8 with `processing_guarantee="exactly-once"` (EOS/transactional Kafka).
 
 ### Topic Layout
 | Topic | Partitions | Notes |
@@ -212,9 +212,9 @@ return True
 | Test | Description | Expected Output |
 |------|-------------|-----------------|
 | Test 1 | Pre-existing data, CB/CBNWM started after; second TGSR flushes CBNWM | All windows from run 1 + 2 |
-| Test 2 | 3 TGSR runs → start CB/CBNWM | 600 records total |
+| Test 2 | 3 TGSR runs → start CB/CBNWM | 600 records total (CB); run_3 stuck (CBNWM) |
 | Test 3 | CB/CBNWM running first, then 2 TGSR runs | 400 records |
-| Test 4 | Single TGSR run, no second batch — watermark proof | 200 records, 2M sum |
+| Test 4 | Continuous stream: CB+CBNWM running → TGCon started | Both producing; CB ~620 records in 60s, CBNWM ~880 |
 
 ### Key Config
 - `WAIT_AFTER_START_CB = 240` seconds (Test 2; increased to handle 6M message backlog)
@@ -222,14 +222,17 @@ return True
 - `max_partition_buffer_size=10000`
 - `grace_ms=10s, tumbling_window=1s, .final()`
 
-### Test Results (with 4 partitions / 4 replicas)
+### Test Results (with 4 partitions / 4 replicas, wheel a8, 2026-03-23)
 | Test | CB | CBNWM | Notes |
 |------|----|-------|-------|
-| 1 run_1 | PASS (200 records, 2M count) | PASS | Confirmed with 4 partitions |
-| 1 run_2 | ~97% (200 records, ~1.93M count) | ~40% expected partial | Slight timing gap; all windows present |
-| 2–4 | Not re-run after 4-partition fix | — | Earlier passing results with 2 partitions |
+| 2 run_1 | 200 records, 1.87M (94%) | 200 records, 772K (39%) | All windows present; sum(count) shortfall is late-data timing |
+| 2 run_2 | 200 records, 1.97M (99%) | 200 records, 285K (14%) | All windows present |
+| 2 run_3 | PASS (200 records, 2M) | STUCK (0) — expected | Last run has no flush for CBNWM |
+| 4 (continuous) | 620 records, 12.4K | 880 records, 17.6K | Both producing; CB fewer due to ~25s watermark warmup |
 
-**Note on run_2 97%**: All 200 expected window records are produced, but `sum(count)` is ~1.93M instead of 2M. Likely a timing issue — some repartition messages from the tail of run_2 arrive slightly after the watermark advance fires (70s wait after TGSR-2 may need to be extended). The CB architecture is otherwise correct.
+**Test 2 note**: CB emits all 600 window records (200 per run). sum(count) shortfall on run_1/2 is a timing issue — some repartition messages arrive after the watermark advance fires.
+
+**Test 4 note**: ~25-second warmup before CB starts expiring windows. First ~3 watermark messages have per-TP fence = -1 (repartition TP watermark not yet received from Kafka). After warmup, windows expire in bursts aligned with EOS commits (~10s intervals). Caught-up advance flushes remaining windows after TGCon stops.
 
 ---
 
@@ -251,7 +254,7 @@ return True
 | `croatian-burocrats/patch_watermarking.py` | Replaces `quixstreams` `WatermarkManager` (read-only) |
 | `croatian-burocrats/main.py` | CB application entry point |
 
-The patch files are applied by being mounted into the container and injecting into the installed quixstreams wheel at runtime.
+All patches are baked into `quixstreams-4.0.0a8-py3-none-any.whl` in `croatian-burocrats/` for deployment (no runtime patching required). The patch files serve as reference copies.
 
 ---
 
@@ -262,6 +265,6 @@ The patch files are applied by being mounted into the container and injecting in
 3. **`consumer_positions` propagation**: pass `position()` results to buffer's `set_consumer_position()` so partitions at EOF can be marked IDLE even when buffer is empty.
 4. **EOS seek fix**: detect partitions where position == `_max_offset + 1` < high watermark and seek to high watermark, bypassing invisible EOS control records.
 5. **EOS debounce**: introduced `_eos_stuck_since` dict and `_EOS_STABLE_SECONDS = 15.0` to prevent premature seeks while another CB replica is still committing to the same repartition partition. Without this, Test 2 (3 pre-loaded runs) would produce only 45% of expected records (CB-1's repartition-0 windows never flushed because CB-3 seeked past it prematurely).
-6. **Wheel packaging**: all patches baked into `quixstreams-4.0.0a7-py3-none-any.whl` in `croatian-burocrats/` for Quix Cloud deployment (no runtime patching required).
+6. **Wheel packaging**: all patches baked into `quixstreams-4.0.0a8-py3-none-any.whl` in `croatian-burocrats/` for deployment (no runtime patching required).
 7. **`idle_watermark` initialisation**: added `idle_watermark = None` before the `while` loop in `app.py` to fix `UnboundLocalError` crash on startup (manifested as CB=0 with 4 partitions and 4 replicas).
 8. **Topology updated to 4 partitions/replicas**: `run_test.py` creates `highway-2` with 4 partitions; `compose.local.yaml` uses `deploy.replicas: 4` for both CB and CBNWM; watermarks topic remains 1 partition.

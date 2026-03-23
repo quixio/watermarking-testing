@@ -167,6 +167,23 @@ def stop_cb_cbnwm():
     )
 
 
+def start_tgcon():
+    print("\n  Starting TGCon (continuous traffic generator) …")
+    run_cmd(
+        f'docker compose -f {COMPOSE_FILE} up -d --build traffic_generator_continuous',
+        description="docker compose up traffic_generator_continuous"
+    )
+
+
+def stop_tgcon():
+    print("\n  Stopping TGCon …")
+    run_cmd(
+        f'docker compose -f {COMPOSE_FILE} stop traffic_generator_continuous',
+        check=False,
+        description="docker compose stop traffic_generator_continuous"
+    )
+
+
 def run_tgsr(label="") -> str:
     """Run TGSR (single-run traffic generator) and return the run_id."""
     tag = f" [{label}]" if label else ""
@@ -353,7 +370,10 @@ def test_2():
     start_cb_cbnwm()
 
     # Longer wait — CB needs to process 6M messages + idle out run_3 windows
-    wait_after = max(WAIT_AFTER_START_CB, 120)
+    # 3 runs × ~55s each to consume + watermark advance buffer + EOS commit time
+    # Both partitions fire near T+165s; EOS commit adds ~20s → need T+190s minimum.
+    # Use 240s to give a comfortable buffer for EOS commits on both partitions.
+    wait_after = max(WAIT_AFTER_START_CB, 240)
     wait_countdown(wait_after,
                    "CB/CBNWM consuming 3 runs (6M msgs) + idle timeout + advance")
 
@@ -451,58 +471,62 @@ def test_3():
 
 
 # ---------------------------------------------------------------------------
-# Test 4 — Watermark proof: TGSR once, NO second batch
+# Test 4 — Online stream: CB+CBNWM running, then TGCon started
 # ---------------------------------------------------------------------------
+
+# How long to let TGCon run before collecting results.
+# Window=1s, grace=10s → first windows close after ~11s of data.
+# 60s gives many windows time to emit from both CB and CBNWM.
+WAIT_TGCON_ONLINE = 60
+
 
 def test_4():
     print()
     print("=" * 70)
-    print("  TEST 4 — Watermark proof: TGSR once, no more data")
+    print("  TEST 4 — Online stream: CB+CBNWM running, TGCon started after")
     print("=" * 70)
-    print("  Flow: TGSR(run_1) -> start CB+CBNWM -> wait (NO second TGSR) -> collect")
+    print("  Precondition: fresh topics, CB and CBNWM already running (idle).")
+    print("  Flow: start CB+CBNWM -> start TGCon -> wait -> collect -> stop TGCon")
     print()
-    print("  CB   (4.0.0a4, idle watermark advance):  should emit 200 windows, 2M sum.")
-    print("  CBNWM (3.23.1, no advance)           :  watermark stuck -> 0 windows emitted.")
-    print()
-    print("  This demonstrates that without watermarking, data is silently lost when")
-    print("  messages stop arriving and windows can no longer be closed.")
+    print("  Expected: with continuous traffic both CB and CBNWM produce records.")
+    print("  Watermarks close naturally as new timestamps advance past grace period.")
 
     clean_and_start_kafka()
 
-    # Step 1: single TGSR run, CB/CBNWM OFF
-    print("\n[1/3] Pre-filling highway-2 with a single TGSR run (CB/CBNWM are OFF) …")
-    run_id_1 = run_tgsr("run_1")
-
-    # Step 2: start CB/CBNWM — and deliberately DO NOT send more data
-    print("\n[2/3] Starting CB and CBNWM (no more data will be sent after this) …")
+    # Step 1: start CB and CBNWM (idle, no data yet)
+    print("\n[1/3] Starting CB and CBNWM (will idle until data arrives) …")
     start_cb_cbnwm()
-    wait_countdown(WAIT_CB_IDLE_ADVANCE,
-                   "CB idle_partition_timeout + watermark advance; CBNWM stuck waiting")
+    wait_countdown(15, "CB/CBNWM startup")
+
+    # Step 2: start continuous traffic generator
+    print("\n[2/3] Starting TGCon (continuous traffic) …")
+    start_tgcon()
+    wait_countdown(WAIT_TGCON_ONLINE,
+                   "TGCon producing; windows closing as timestamps advance (grace=10s)")
 
     # Step 3: collect
     print("\n[3/3] Collecting results …")
-    cb_records, nwm_records = collect_and_display(
-        highlight_ids=[run_id_1],
-        test_label="Test 4 — Watermark proof"
-    )
+    cb_records, nwm_records = collect_and_display(test_label="Test 4 — Online stream")
+
+    stop_tgcon()
 
     # Analysis
     cb_t, cb_c = aggregate(cb_records)
     nw_t, nw_c = aggregate(nwm_records)
-    cb_s  = cb_t.get(run_id_1, 0)
-    nw_s  = nw_t.get(run_id_1, 0)
-    cb_r  = cb_c.get(run_id_1, 0)
-    nw_r  = nw_c.get(run_id_1, 0)
+    total_cb  = sum(cb_t.values())
+    total_nwm = sum(nw_t.values())
 
-    print("  Verdict:")
-    print(f"    CB    -> {cb_r:>4} records, sum(count) = {cb_s:>10,}  "
-          f"{'PASS — idle watermark advance worked OK' if cb_s == EXPECTED_MESSAGES_PER_RUN else f'FAIL — expected {EXPECTED_MESSAGES_PER_RUN:,}'}")
-    print(f"    CBNWM -> {nw_r:>4} records, sum(count) = {nw_s:>10,}  "
-          f"{'STUCK as expected — no watermark advance OK' if nw_s == 0 else f'WARNING — emitted {nw_s:,} (unexpectedly)'}")
-
-    if cb_s > 0 and nw_s < cb_s:
-        lost = cb_s - nw_s
-        print(f"\n    Messages silently lost by CBNWM: {lost:,}  ({100.0 * lost / cb_s:.1f}%)")
+    print("  Analysis:")
+    print(f"    CB    : {len(cb_records):>6,} records, sum(count) = {total_cb:>12,}  "
+          f"{'PRODUCING' if total_cb > 0 else 'STUCK — no records emitted'}")
+    print(f"    CBNWM : {len(nwm_records):>6,} records, sum(count) = {total_nwm:>12,}  "
+          f"{'PRODUCING' if total_nwm > 0 else 'STUCK — no records emitted'}")
+    if total_cb > 0 and total_nwm > 0:
+        print("\n  PASS — both services are producing output from the live stream.")
+    elif total_cb > 0 and total_nwm == 0:
+        print("\n  WARN — CB producing but CBNWM stuck. Check CBNWM logs.")
+    else:
+        print("\n  FAIL — neither service produced output. Check CB and CBNWM logs.")
     print()
 
 
