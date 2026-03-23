@@ -23,7 +23,7 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 250
+        value: 1000
       - name: RUN_ID_MIN_SECONDS
         inputType: FreeText
         description: Minimum number of seconds before rotating run_id
