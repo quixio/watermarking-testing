@@ -56,7 +56,6 @@ def main():
         return value["ts"]
 
     consumer_group = "burocrats_watermarking_" + os.environ["consumer_group"]
-    clear_state_if_requested()
 
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
@@ -72,6 +71,11 @@ def main():
         watermarks_idle_partition_timeout=30.0,
         watermarks_idle_advance_after_ms=30000,
     )
+
+    # Clear state AFTER Application init (which creates the state directory).
+    # This removes stale RocksDB data (latest_expired_window_end) that would
+    # cause replayed data to be classified as "late" after a redeploy.
+    clear_state_if_requested()
 
     input_topic = app.topic(
         name=os.environ["input"],
