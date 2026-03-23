@@ -27,11 +27,11 @@ deployments:
       - name: RUN_ID_MIN_SECONDS
         inputType: FreeText
         description: Minimum number of seconds before rotating run_id
-        value: 10
+        value: 8
       - name: RUN_ID_MAX_SECONDS
         inputType: FreeText
         description: Maximum number of seconds before rotating run_id
-        value: 10
+        value: 15
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
