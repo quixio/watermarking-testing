@@ -17,10 +17,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def clear_state_if_requested(consumer_group: str):
+def clear_state_if_requested():
     """
-    Delete the RocksDB state directory so that latest_expired_window_end
+    Delete ALL contents of /app/state/ so that latest_expired_window_end
     resets to 0 and replayed data is not classified as "late".
+
+    Wipes the entire state directory rather than guessing the consumer group
+    subdirectory name (which Quix Cloud prefixes with the environment name).
 
     Controlled by CLEAR_STATE env var:
       "true"  — always clear state on startup
@@ -29,12 +32,21 @@ def clear_state_if_requested(consumer_group: str):
     if os.environ.get("CLEAR_STATE", "").lower() != "true":
         return
 
-    state_dir = Path("/app/state") / consumer_group
+    state_dir = Path("/app/state")
     if state_dir.exists():
-        print(f"[STARTUP] CLEAR_STATE=true — deleting state directory: {state_dir}", flush=True)
-        shutil.rmtree(state_dir)
+        entries = list(state_dir.iterdir())
+        if entries:
+            print(f"[STARTUP] CLEAR_STATE=true — deleting {len(entries)} entries in {state_dir}: "
+                  f"{[e.name for e in entries]}", flush=True)
+            for entry in entries:
+                if entry.is_dir():
+                    shutil.rmtree(entry)
+                else:
+                    entry.unlink()
+        else:
+            print(f"[STARTUP] CLEAR_STATE=true — state directory empty: {state_dir}", flush=True)
     else:
-        print(f"[STARTUP] CLEAR_STATE=true — no state directory to delete: {state_dir}", flush=True)
+        print(f"[STARTUP] CLEAR_STATE=true — no state directory: {state_dir}", flush=True)
 
 
 def main():
@@ -44,7 +56,7 @@ def main():
         return value["ts"]
 
     consumer_group = "burocrats_watermarking_" + os.environ["consumer_group"]
-    clear_state_if_requested(consumer_group)
+    clear_state_if_requested()
 
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
