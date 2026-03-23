@@ -305,7 +305,6 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
         value: updatedWMAlgo
-    disabled: true
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
