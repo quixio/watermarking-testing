@@ -44,7 +44,7 @@ class VehicleTrafficGenerator(Source):
         return f"{prefix}-{self._plate_counter:05d}"
 
     def _new_run_id(self):
-        return "run_" + str(datetime.now(timezone(timedelta(hours=1))))
+        return "run_" + str(datetime.now(timezone(timedelta(hours=2))))
 
     def run(self):
         self._plate_counter = 0
@@ -59,7 +59,7 @@ class VehicleTrafficGenerator(Source):
 
         while self.running:
             tick_start = time.monotonic()
-            second_start = datetime.now(timezone(timedelta(hours=1))).replace(microsecond=0)
+            second_start = datetime.now(timezone(timedelta(hours=2))).replace(microsecond=0)
             second_start_ms = int(second_start.timestamp() * 1000)
             second_sent = 0
 
