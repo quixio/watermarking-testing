@@ -56,7 +56,7 @@ def main():
 
     sdf = (
         sdf
-        .tumbling_window(duration_ms=timedelta(seconds=10), grace_ms=timedelta(seconds=2))
+        .tumbling_window(duration_ms=timedelta(seconds=10), grace_ms=timedelta(seconds=1))
         .agg(count=Count(), run_id=First("run_id"))
         .final()
     )
