@@ -32,8 +32,8 @@ def main():
     app = Application(
         consumer_group="burocrats_watermarking_v4_" + os.environ["consumer_group"],
         auto_create_topics=True,
-        auto_offset_reset="earliest",
-        processing_guarantee="exactly-once"
+        auto_offset_reset="latest",
+        processing_guarantee="at-least-once"
     )
 
     input_topic = app.topic(
