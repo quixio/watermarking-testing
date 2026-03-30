@@ -33,7 +33,8 @@ def main():
         consumer_group="burocrats_watermarking_v4_" + os.environ["consumer_group"],
         auto_create_topics=True,
         auto_offset_reset="earliest",
-        processing_guarantee="exactly-once"
+        processing_guarantee="exactly-once",
+        max_partition_buffer_size=10000,
     )
 
     input_topic = app.topic(
