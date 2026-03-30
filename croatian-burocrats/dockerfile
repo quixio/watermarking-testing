@@ -16,8 +16,8 @@ WORKDIR /app
 COPY "${MAINAPPPATH}/requirements.txt" "${MAINAPPPATH}/requirements.txt"
 COPY "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl" "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl"
 
- # Install the local wheel and remaining dependencies
- RUN pip install --no-cache-dir "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl" \
+# Install the local wheel and remaining dependencies
+RUN pip install --no-cache-dir "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl" \
 && pip install --no-cache-dir -r "${MAINAPPPATH}/requirements.txt" 
 
 # Copy entire application into container
