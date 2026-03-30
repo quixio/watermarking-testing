@@ -16,10 +16,10 @@ WORKDIR /app
 COPY "${MAINAPPPATH}/requirements.txt" "${MAINAPPPATH}/requirements.txt"
 COPY "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl" "${MAINAPPPATH}/quixstreams-4.0.0a8-py3-none-any.whl"
 
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt
 # Install dependencies from the directory where the wheel lives
 WORKDIR /app/${MAINAPPPATH}
-RUN pip install --no-cache-dir -r requirements.txt
-WORKDIR /app
 
 # Copy entire application into container
 COPY . .
