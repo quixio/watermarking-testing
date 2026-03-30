@@ -30,9 +30,6 @@ def main():
         commit_every=1000,
         max_partition_buffer_size=10000,
         commit_interval=10,
-        eos_stable_seconds=15.0,
-        watermarks_idle_partition_timeout=15.0,
-        watermarks_idle_advance_after_ms=15000,
     )
 
     input_topic = app.topic(
