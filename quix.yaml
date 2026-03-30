@@ -23,23 +23,22 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 20
+        value: 2
       - name: RUN_ID_MIN_SECONDS
         inputType: FreeText
         description: Minimum number of seconds before rotating run_id
-        value: 20
+        value: 8
       - name: RUN_ID_MAX_SECONDS
         inputType: FreeText
         description: Maximum number of seconds before rotating run_id
-        value: 50
-    disabled: true
+        value: 15
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
     deploymentType: Service
     resources:
-      cpu: 700
-      memory: 500
+      cpu: 100
+      memory: 400
       replicas: 4
     state:
       enabled: true
@@ -77,7 +76,7 @@ deployments:
       - name: TABLE_NAME
         inputType: FreeText
         description: Table name for data organization and registration, else defaults to topic name
-        value: carcoloursv3
+        value: carcoloursv2
       - name: HIVE_COLUMNS
         inputType: FreeText
         description: Comma-separated list of columns for Hive partitioning. Include year/month/day/hour to extract from TIMESTAMP_COLUMN (e.g., location,year,month,day,sensor_type)
@@ -141,8 +140,8 @@ deployments:
     version: latest
     deploymentType: Service
     resources:
-      cpu: 700
-      memory: 500
+      cpu: 100
+      memory: 400
       replicas: 4
     state:
       enabled: true
@@ -176,7 +175,7 @@ deployments:
       - name: TABLE_NAME
         inputType: FreeText
         description: Table name for data organization and registration, else defaults to topic name
-        value: carcoloursnomwv3
+        value: carcoloursnomwv2
       - name: HIVE_COLUMNS
         inputType: FreeText
         description: Comma-separated list of columns for Hive partitioning. Include year/month/day/hour to extract from TIMESTAMP_COLUMN (e.g., location,year,month,day,sensor_type)
@@ -384,8 +383,8 @@ deployments:
     version: latest
     deploymentType: Job
     resources:
-      cpu: 4000
-      memory: 5800
+      cpu: 1000
+      memory: 4500
       replicas: 1
     variables:
       - name: output
@@ -396,7 +395,7 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 20
+        value: 10
       - name: RUN_DURATION_SECONDS
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
@@ -405,6 +404,7 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
         value: updatedWMAlgo
+    disabled: true
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
