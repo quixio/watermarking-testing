@@ -12,16 +12,15 @@ ARG MAINAPPPATH=.
 # Set working directory inside the container
 WORKDIR /app
 			
-# Copy requirements and local wheel to leverage Docker cache
+# Copy requirements to leverage Docker cache
 COPY "${MAINAPPPATH}/requirements.txt" "${MAINAPPPATH}/requirements.txt"
-COPY "${MAINAPPPATH}/quixstreams-4.0.0a7-py3-none-any.whl" "${MAINAPPPATH}/quixstreams-4.0.0a7-py3-none-any.whl"
-
+			
 # Install dependencies without caching
 RUN pip install --no-cache-dir -r "${MAINAPPPATH}/requirements.txt"
-
+			
 # Copy entire application into container
 COPY . .
-
+			
 # Set working directory to main app path
 WORKDIR "/app/${MAINAPPPATH}"
 			

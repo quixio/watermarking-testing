@@ -271,18 +271,48 @@ if start <= max_expired_window_start:
 - **Test 2 (pre-loaded, fresh start)**: `docker compose down -v` wipes state volumes → `latest_expired_window_end = 0` → no data is "late".
 - **Continuous streaming (Quix Cloud redeploy)**: State persists → old `latest_expired_window_end` → replayed data all classified as late → zero output.
 
+### Underlying Cause: `highway-2` Topic Retention Too Small
+The original `quix.yaml` had `retentionInBytes: 52428800` (50MB) with `retentionInMinutes: -1` (infinite time). With TGCon at `MESSAGES_PER_BRAND_COLOUR=1000` producing ~400K msgs/sec, 50MB fills in **under a minute**. Kafka deletes old segments, the consumer's stored offset becomes invalid, and it resets to BEGINNING. Fixed by switching to time-based retention: `retentionInMinutes: 60, retentionInBytes: -1`.
+
 ### Fix Options
 | Option | Tradeoff |
 |--------|----------|
+| **Increase topic retention** | Set `retentionInMinutes: 60, retentionInBytes: -1` so Kafka doesn't delete segments while CB is consuming. Prevents the offset-out-of-range trigger. |
 | `auto_offset_reset="latest"` | Skips old data, only processes new messages. Good for continuous streaming but loses data produced during downtime. |
-| Clear state on redeploy | Wipe `/app/state/` before starting. Replay works but reprocesses everything from the beginning. |
-| Both (`latest` + clear state) | Clean start from current data. Best for continuous streaming. |
+| Clear state on redeploy | Wipe `/app/state/` before starting. Hard to do safely with 4 replicas sharing state volume (race conditions). |
+| Delete/recreate topics | Nuclear option — clears offsets and data. Use when other fixes don't apply. |
 
 ### Evidence
 From `Croatian Burocrats(1).log` (Quix Cloud, 2026-03-23):
 - Line 6: `offset reset (at offset 28130787) to offset BEGINNING`
 - Lines 10–39753: 39,744 consecutive "Skipping record processing for the closed window" — all timestamps from March 21
 - Zero watermark processing, zero window expiry, zero output
+
+---
+
+## Bug 4: Watermark Message Starvation at High Data Volume (Quix Cloud)
+
+### Symptom
+With TGCon at `MESSAGES_PER_BRAND_COLOUR=1000` (400K msgs/sec), CB fires idle-advance **once** for the initial data batch, then never expires windows again. The `colours` topic receives one burst of records and then nothing. CBNWM continues producing normally.
+
+### Root Cause
+In unbuffered polling mode (`poll()` returns one message at a time), 400K data messages/sec completely starve the ~8 watermark messages/sec. `poll()` always returns a data message because the internal Kafka consumer queue is saturated with data. Watermark messages are never consumed → `receive()` never fires → `global_watermark` never advances → windows never close via the watermark path.
+
+The idle-advance fires once (after the initial batch drains and 30s pass), but then `store()` keeps resetting `_last_watermark_advanced_wall` on every new data message, so idle-advance never fires again.
+
+### Why It Works Locally but Not in Quix Cloud
+- **Local** (`compose.local.yaml`): TGCon uses `MESSAGES_PER_BRAND_COLOUR=1` → 400 msgs/sec → watermarks not starved → windows close normally
+- **Quix Cloud** (`quix.yaml`): TGCon uses `MESSAGES_PER_BRAND_COLOUR=1000` → 400K msgs/sec → watermarks completely starved
+
+### Fix
+Reduce `MESSAGES_PER_BRAND_COLOUR` in TGCon, or implement priority consumption for the watermarks topic (library-level change).
+
+### Evidence
+From `Croatian Burocrats(5-8).log` (Quix Cloud, 2026-03-23):
+- All 4 replicas show zero `Process watermark` log entries
+- All expire windows only via `Idle-advance` (one burst each: 40, 80, 100, 80 windows)
+- After idle-advance, no further window expiry despite continuous data flow
+- CBNWM (no watermarks, same data) processes continuously without issue
 
 ---
 

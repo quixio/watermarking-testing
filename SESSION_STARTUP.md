@@ -180,17 +180,25 @@ app = Application(
 | `idle_watermark` unset | `UnboundLocalError` crash on startup, CB=0 | `idle_watermark = None` before `while` loop in `app.py` |
 | Watermarks topic N partitions | Replicas without `watermarks[0]` never receive watermark updates | `manager.py` forces watermarks topic to 1 partition |
 | Non-blocking watermarks buffer | Watermarks partition blocks data `pop()` when empty | `buffering.py` marks watermarks partition `non_blocking=True` |
-| Stale state + offset reset | After redeploy, all replayed data classified as "late" → 0 output | Clear state on redeploy, or use `auto_offset_reset="latest"` |
+| Stale state + offset reset | After redeploy, all replayed data classified as "late" → 0 output | Increase topic retention; delete/recreate topics before restart |
+| Watermark starvation | At high data volume (400K msgs/sec), watermark messages never consumed → windows only close once via idle-advance | Reduce `MESSAGES_PER_BRAND_COLOUR` or implement priority watermark consumption |
+| `highway-2` retention too small | 50MB `retentionInBytes` fills in <1 min at high volume → offset out of range | Changed to `retentionInMinutes: 60, retentionInBytes: -1` |
 
-## Quix Cloud — "few messages in colours"
+## Quix Cloud — Known Issues
 
-**Symptom**: After deploying to Quix Cloud with continuous TG, `colours` topic shows only a few records.
+### Issue 1: Stale state + offset reset (Bug 3)
+**Symptom**: After redeploy, CB logs 39K+ "Skipping record processing for the closed window" messages and emits zero output.
+**Cause**: `highway-2` retention (was 50MB) deletes segments → consumer offset invalid → reset to BEGINNING → stale `latest_expired_window_end` in RocksDB classifies all replayed data as "late".
+**Fix**: `retentionInMinutes: 60, retentionInBytes: -1` in `quix.yaml`. Delete/recreate topics if already in bad state.
 
-**Root cause confirmed NOT**: All 4 replicas correctly receive `watermarks[0]` — `_on_assign` calls `consumer.assign()` which overrides the Kafka group assignment to explicitly include the watermarks partition for every replica. The `is_watermark=True` pipeline is also correct.
+### Issue 2: Watermark starvation at high volume (Bug 4)
+**Symptom**: CB fires idle-advance once, then no more window expiry despite continuous data. CBNWM works fine.
+**Cause**: TGCon `MESSAGES_PER_BRAND_COLOUR=1000` → 400K data msgs/sec starves ~8 watermark msgs/sec in `poll()`.
+**Fix**: Reduce `MESSAGES_PER_BRAND_COLOUR` or implement library-level watermark priority.
 
-**Most likely cause**: Stale Docker image — Quix Cloud built the image before the `idle_watermark = None` fix was committed. The UnboundLocalError crashes every replica immediately on startup; Kubernetes restarts them; a tiny number of messages escape before the crash.
-
-**Fix**: Force a redeploy in Quix Cloud to rebuild the image with the current wheel (`version: latest` → re-trigger build from the latest commit on the connected branch).
+### Issue 3: Stale Docker image (historical, fixed)
+**Symptom**: CB crashes immediately with `UnboundLocalError: idle_watermark`.
+**Fix**: Force redeploy to rebuild image with current wheel.
 
 **How to verify fix is deployed**: Check CB logs — if you see `[STARTUP] calling app.run()` followed by normal processing, the fix is in. If you see `UnboundLocalError: cannot access local variable 'idle_watermark'`, the old image is still running.
 

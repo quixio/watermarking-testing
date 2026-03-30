@@ -1,4 +1,4 @@
-name: Croatian Burocrats
+name: Croatian Burocrats V4
 language: python
 variables:
   - name: input
@@ -10,17 +10,11 @@ variables:
     inputType: OutputTopic
     multiline: false
     description: Name of the output topic to write to.
-    defaultValue: colours
+    defaultValue: coloursV4
   - name: consumer_group
     inputType: FreeText
     multiline: false
     defaultValue: v1
-  - name: AUTO_OFFSET_RESET
-    inputType: FreeText
-    multiline: false
-    description: Consumer auto.offset.reset — "latest" protects against stale-state replay
-    defaultValue: earliest
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
-libraryItemId: starter-transformation

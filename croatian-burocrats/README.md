@@ -27,17 +27,24 @@ app = Application(
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `input` | Input topic (e.g. `highway-2`) |
-| `output` | Output topic (e.g. `colours`) |
-| `consumer_group` | Consumer group suffix (e.g. `v1`) |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `input` | Input topic (e.g. `highway-2`) | — |
+| `output` | Output topic (e.g. `colours`) | — |
+| `consumer_group` | Consumer group suffix (e.g. `v1`) | — |
+| `AUTO_OFFSET_RESET` | Consumer `auto.offset.reset`. Use `latest` in Quix Cloud to protect against stale-state replay when retention deletes old segments. Use `earliest` for local tests with pre-loaded data. | `earliest` |
 
 ## Deployment
 
 - **4 replicas** (one per partition of `highway-2`)
-- Uses patched quixstreams 4.0.0a7 from `quixstreams-4.0.0a7-py3-none-any.whl`
+- Uses patched quixstreams 4.0.0a8 from `quixstreams-4.0.0a8-py3-none-any.whl`
 - Wheel is built from `C:\repos\quix-streams_4a4` with all EOS and watermarking fixes
+
+## Quix Cloud Notes
+
+- Set `AUTO_OFFSET_RESET=latest` to prevent the stale-state death spiral when consumer offsets expire
+- `highway-2` topic needs sufficient retention (`retentionInMinutes: 60, retentionInBytes: -1`) to prevent offset-out-of-range errors
+- At high data volume (TGCon `MESSAGES_PER_BRAND_COLOUR=1000`), watermark messages can be starved by data messages — reduce volume or use lower `MESSAGES_PER_BRAND_COLOUR`
 
 ## Patch Files
 

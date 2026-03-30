@@ -14,6 +14,13 @@ from quixstreams.dataframe.windows import Count, First
 from dotenv import load_dotenv
 load_dotenv()
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [colour-counter] %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
 def main():
     # Use the message's own "ts" field (epoch ms) as the event timestamp.
     # This ensures windowing is driven by event time, not Kafka broker time.
@@ -23,16 +30,10 @@ def main():
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="burocrats_watermarking_" + os.environ["consumer_group"],
+        consumer_group="burocrats_watermarking_v4_" + os.environ["consumer_group"],
         auto_create_topics=True,
-        auto_offset_reset=os.environ.get("AUTO_OFFSET_RESET", "earliest"),
-        processing_guarantee="exactly-once",
-        commit_every=1000,
-        max_partition_buffer_size=10000,
-        commit_interval=10,
-        eos_stable_seconds=15.0,
-        watermarks_idle_partition_timeout=15.0,
-        watermarks_idle_advance_after_ms=15000,
+        auto_offset_reset="earliest",
+        processing_guarantee="exactly-once"
     )
 
     input_topic = app.topic(
@@ -62,11 +63,10 @@ def main():
     )
 
     sdf.print_table()
-
+    
     sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
-    print("[STARTUP] calling app.run()", flush=True)
     app.run()
 
 

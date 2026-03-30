@@ -23,7 +23,7 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 1000
+        value: 20
       - name: RUN_ID_MIN_SECONDS
         inputType: FreeText
         description: Minimum number of seconds before rotating run_id
@@ -56,6 +56,10 @@ deployments:
       - name: consumer_group
         inputType: FreeText
         value: {{consumer_group}}
+      - name: AUTO_OFFSET_RESET
+        inputType: FreeText
+        description: Consumer auto.offset.reset — "latest" protects against stale-state replay when retention deletes old segments
+        value: latest
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest
@@ -231,6 +235,105 @@ deployments:
         value: 10
     blobStorage:
       bind: true
+  - name: Croatian Burocrats V4
+    application: croatian-burocrats-v4
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 700
+      memory: 500
+      replicas: 4
+    state:
+      enabled: true
+      size: 1
+    variables:
+      - name: input
+        inputType: InputTopic
+        description: Name of the input topic to listen to.
+        value: highway-2
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write to.
+        value: coloursV4
+      - name: consumer_group
+        inputType: FreeText
+        value: {{consumer_group}}
+  - name: CarColoursDataLake V4
+    application: carcoloursdatalake-v4
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: input
+        inputType: InputTopic
+        description: Name of the Kafka input topic to consume from
+        required: true
+        value: coloursV4
+      - name: TABLE_NAME
+        inputType: FreeText
+        description: Table name for data organization and registration, else defaults to topic name
+        value: carcoloursv4
+      - name: HIVE_COLUMNS
+        inputType: FreeText
+        description: Comma-separated list of columns for Hive partitioning. Include year/month/day/hour to extract from TIMESTAMP_COLUMN (e.g., location,year,month,day,sensor_type)
+        value: run_id
+      - name: TIMESTAMP_COLUMN
+        inputType: FreeText
+        description: Column containing timestamp values to extract year/month/day/hour from
+        value: ts_ms
+      - name: CATALOG_URL
+        inputType: FreeText
+        description: REST Catalog URL for optional table registration (leave empty to skip)
+        value: https://iceberg-catalog-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+      - name: CATALOG_AUTH_TOKEN
+        inputType: Secret
+        description: If using a catalog, the respective auth token to access it
+        secretKey: pat
+      - name: AUTO_DISCOVER
+        inputType: FreeText
+        description: Automatically register table in REST Catalog on first write
+        value: true
+      - name: CATALOG_NAMESPACE
+        inputType: FreeText
+        description: Catalog namespace for table registration
+        value: default
+      - name: BATCH_SIZE
+        inputType: FreeText
+        description: Number of messages to batch before writing to storage
+        value: 1000
+      - name: COMMIT_INTERVAL
+        inputType: FreeText
+        description: Kafka commit interval in seconds
+        value: 30
+      - name: KAFKA_KEY_DESERIALIZER
+        inputType: FreeText
+        description: The key deserializer to use
+        value: str
+      - name: KAFKA_VALUE_DESERIALIZER
+        inputType: FreeText
+        description: the value deserializer to use
+        value: json
+      - name: CONSUMER_GROUP
+        inputType: FreeText
+        description: Kafka consumer group name
+        value: s3_direct_sink_v4
+      - name: AUTO_OFFSET_RESET
+        inputType: FreeText
+        description: Where to start consuming if no offset exists
+        value: earliest
+      - name: LOGLEVEL
+        inputType: FreeText
+        description: Application logging level
+        value: INFO
+      - name: MAX_WRITE_WORKERS
+        inputType: FreeText
+        description: How many files can be written in parallel to storage at once (based on partitioning + batch size)
+        value: 10
+    blobStorage:
+      bind: true
   - name: Watermarks tests
     application: watermarks-tests
     version: latest
@@ -293,7 +396,7 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 500
+        value: 20
       - name: RUN_DURATION_SECONDS
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
@@ -385,12 +488,15 @@ topics:
     configuration:
       partitions: 4
       replicationFactor: 2
-      retentionInMinutes: -1
-      retentionInBytes: 52428800
+      retentionInMinutes: 60
+      retentionInBytes: -1
   - name: coloursNoWM
     configuration:
       partitions: 4
   - name: colours
+    configuration:
+      partitions: 4
+  - name: coloursV4
     configuration:
       partitions: 4
   - name: watermarks__colour_counter_v1.2--watermarks
