@@ -489,7 +489,7 @@ topics:
       partitions: 4
       replicationFactor: 2
       retentionInMinutes: -1
-      retentionInBytes: 52428800
+      retentionInBytes: 524288000
   - name: coloursNoWM
   - name: colours
   - name: watermarks__burocrats_watermarking_v1.1--watermarks
