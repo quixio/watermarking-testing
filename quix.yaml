@@ -486,3 +486,4 @@ deployments:
 topics:
   - name: colours
   - name: highway-2
+  - name: coloursNoWM
