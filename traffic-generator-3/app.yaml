@@ -1,0 +1,29 @@
+name: Traffic Generator SingleRun V2
+language: python
+variables:
+  - name: output
+    inputType: OutputTopic
+    multiline: false
+    description: Name of the output topic to write into
+    defaultValue: highway-2
+    required: true
+  - name: MESSAGES_PER_BRAND_COLOUR
+    inputType: FreeText
+    multiline: false
+    description: Messages per (brand, colour) pair per 10s window. Total per window = 400 * this value.
+    defaultValue: 10
+  - name: NUM_WINDOWS
+    inputType: FreeText
+    description: Number of sequential 10-second event-time windows to generate
+    defaultValue: 6
+  - name: SEND_DURATION_SECONDS
+    inputType: FreeText
+    description: Real-time seconds to spread each window's messages over (pacing)
+    defaultValue: 10
+  - name: RUN_ID_PREFIX
+    inputType: FreeText
+    description: Prefix used in the run_id
+    defaultValue: run
+dockerfile: dockerfile
+runEntryPoint: main.py
+defaultFile: main.py

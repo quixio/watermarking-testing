@@ -405,6 +405,36 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
         value: 40kMsgs
+  - name: Traffic Generator V2
+    application: traffic-generator-3
+    version: latest
+    deploymentType: Job
+    resources:
+      cpu: 1000
+      memory: 4500
+      replicas: 1
+    variables:
+      - name: output
+        inputType: OutputTopic
+        description: Name of the output topic to write into
+        required: true
+        value: highway-2
+      - name: MESSAGES_PER_BRAND_COLOUR
+        inputType: FreeText
+        description: Messages per (brand, colour) pair per 10s window. Total per window = 400 * this value.
+        value: 50
+      - name: NUM_WINDOWS
+        inputType: FreeText
+        description: Number of sequential 10-second event-time windows to generate
+        value: 6
+      - name: SEND_DURATION_SECONDS
+        inputType: FreeText
+        description: Real-time seconds to spread each window's messages over (pacing)
+        value: 1
+      - name: RUN_ID_PREFIX
+        inputType: FreeText
+        description: Prefix used in the run_id
+        value: burst
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
