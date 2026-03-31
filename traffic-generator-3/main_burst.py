@@ -60,7 +60,7 @@ class BurstTrafficGenerator(Source):
     def run(self):
         self._plate_counter = 0
         total_sent = 0
-        run_id = RUN_ID_PREFIX + "_" + str(datetime.now(CEST))
+        run_id = str(datetime.now(CEST)) + "_" + RUN_ID_PREFIX
 
         messages_per_window = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
         window_start = datetime.now(CEST).replace(microsecond=0)
