@@ -396,7 +396,7 @@ deployments:
       - name: MESSAGES_PER_BRAND_COLOUR
         inputType: FreeText
         description: Number of messages to generate per (brand, colour) pair each second
-        value: 10
+        value: 20
       - name: RUN_DURATION_SECONDS
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
@@ -404,7 +404,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: 40kMsgs
+        value: 80kMsgs
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
