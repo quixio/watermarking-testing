@@ -490,9 +490,6 @@ topics:
   - name: coloursNoWM
     configuration:
       partitions: 4
-  - name: colours
-    configuration:
-      partitions: 4
   - name: coloursV4
     configuration:
       partitions: 4
