@@ -435,7 +435,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id
-        value: burst
+        value: 120kMsgBurst
   - name: WatermarksLake
     application: carcoloursdatalakenowm
     version: latest
