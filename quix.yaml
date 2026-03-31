@@ -484,12 +484,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: highway-2
-    configuration:
-      partitions: 4
-      replicationFactor: 2
-      retentionInMinutes: -1
-      retentionInBytes: 524288000
   - name: watermarks__burocrats_watermarking_v1.2--watermarks
     configuration:
       partitions: 1
