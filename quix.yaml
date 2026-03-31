@@ -487,7 +487,6 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-  - name: coloursNoWM
   - name: watermarks__burocrats_watermarking_v3--watermarks
     configuration:
       partitions: 1
