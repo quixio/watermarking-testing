@@ -487,9 +487,6 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-  - name: coloursNoWM
-    configuration:
-      partitions: 4
   - name: coloursV4
     configuration:
       partitions: 4
