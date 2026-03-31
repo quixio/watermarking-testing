@@ -484,7 +484,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: colours
   - name: highway-2
   - name: coloursNoWM
   - name: watermarks__burocrats_watermarking_v1--watermarks
