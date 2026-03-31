@@ -490,3 +490,4 @@ topics:
       replicationFactor: 2
       retentionInMinutes: -1
       retentionInBytes: 524288000
+  - name: colours
