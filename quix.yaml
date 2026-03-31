@@ -427,11 +427,11 @@ deployments:
       - name: NUM_WINDOWS
         inputType: FreeText
         description: Number of sequential 10-second event-time windows to generate
-        value: 6
+        value: 10
       - name: SEND_DURATION_SECONDS
         inputType: FreeText
         description: Real-time seconds to spread each window's messages over (pacing)
-        value: 1
+        value: 2
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id
