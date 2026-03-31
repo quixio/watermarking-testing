@@ -487,9 +487,6 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-  - name: coloursV4
-    configuration:
-      partitions: 4
   - name: watermarks__colour_counter_v1.2--watermarks
     configuration:
       partitions: 1
