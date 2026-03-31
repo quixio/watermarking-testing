@@ -35,7 +35,7 @@ def main():
     input_topic = app.topic(
         name=os.environ["input"],
         timestamp_extractor=ts_extractor,
-    )
+    ) 
 
     output_topic = app.topic(name=os.environ["output"])
 
