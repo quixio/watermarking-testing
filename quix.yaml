@@ -404,8 +404,8 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: 320kMsgsAfterOfflineData
         value: 40kMsgs
+    disabled: true
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
@@ -533,6 +533,10 @@ topics:
       cleanupPolicy: Compact
   - name: coloursNoWM
   - name: watermarks__burocrats_watermarking_v1.5--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
+  - name: watermarks__burocrats_watermarking_v4_v1.5--watermarks
     configuration:
       partitions: 1
       cleanupPolicy: Compact
