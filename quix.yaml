@@ -487,3 +487,7 @@ topics:
   - name: colours
   - name: highway-2
   - name: coloursNoWM
+  - name: watermarks__burocrats_watermarking_v3--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
