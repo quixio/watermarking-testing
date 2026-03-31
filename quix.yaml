@@ -404,8 +404,8 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: 320kMsgsAfterOfflineData
         value: 40kMsgs
+    disabled: true
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
