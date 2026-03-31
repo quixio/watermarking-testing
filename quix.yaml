@@ -59,7 +59,7 @@ deployments:
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
         description: Consumer auto.offset.reset — "latest" protects against stale-state replay
-        value: latest
+        value: earliest
   - name: CarColoursQuixLake
     application: carcoloursquixlake
     version: latest
