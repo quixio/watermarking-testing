@@ -34,7 +34,9 @@ def main():
         auto_create_topics=True,
         auto_offset_reset="earliest",
         processing_guarantee="exactly-once",
+        commit_every=1000,
         max_partition_buffer_size=10000,
+        commit_interval=10 
     )
 
     input_topic = app.topic(
