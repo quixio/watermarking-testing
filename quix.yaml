@@ -513,3 +513,6 @@ deployments:
     blobStorage:
       bind: true
 
+# This section describes the Topics of the data pipeline
+topics:
+  - name: highway-2
