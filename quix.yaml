@@ -523,3 +523,4 @@ topics:
       retentionInBytes: 524288000
   - name: colours
   - name: coloursV4
+  - name: coloursNoWM
