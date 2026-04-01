@@ -1,0 +1,15 @@
+
+
+1st When I overload CB it stops producing data? Is this correct behavior.
+2nd KAfka is dropping often, can it be somehow monitored, what is hapenning? CAn it be connected to watermarks algo?
+3rd How to set window and grae period
+4th I do not thing generated data are correct, because has same timestamp inside
+
+
+Q1: How is time advanced in watermarks?
+
+Q2: What time we send to watermark topic
+
+Q3a: how we handle empty topic?
+
+Q3b: how we let watermarking algo know that tehre are no messages left in the topic

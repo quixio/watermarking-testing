@@ -426,7 +426,11 @@ deployments:
         value: 50
       - name: NUM_WINDOWS
         inputType: FreeText
-        description: Number of sequential 10-second event-time windows to generate
+        description: Number of sequential event-time windows to generate
+        value: 10
+      - name: WINDOW_SECONDS
+        inputType: FreeText
+        description: Duration of each event-time window in seconds
         value: 10
       - name: SEND_DURATION_SECONDS
         inputType: FreeText

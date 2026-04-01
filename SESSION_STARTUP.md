@@ -109,23 +109,7 @@ pip wheel . --no-deps -w dist/
 cp dist/quixstreams-4.0.0a8-py3-none-any.whl ../WatermarkingTest/croatian-burocrats/
 ```
 
-**Always rebuild the wheel after editing any of these files:**
-| Source file | What it patches |
-|---|---|
-| `quixstreams/app.py` | Main loop: `idle_watermark = None` init; `eos_stable_seconds` wired to InternalConsumer |
-| `quixstreams/internal_consumer/consumer.py` | EOS seek with 15s debounce; `eos_stable_seconds` param |
-| `quixstreams/internal_consumer/buffering.py` | `is_eos_stuck()`; non-blocking watermarks partition; `set_consumer_position()` |
-| `quixstreams/models/topics/manager.py` | Watermarks topic forced to 1 partition |
-| `quixstreams/processing/watermarking.py` | `idle_advance_after`; `idle_partition_timeout`; `_owned_tps` |
-
-**After rebuilding**, also update the reference patch files (optional but good hygiene):
-```bash
-cp quixstreams/app.py                          ../WatermarkingTest/croatian-burocrats/patch_app.py
-cp quixstreams/internal_consumer/consumer.py   ../WatermarkingTest/croatian-burocrats/patch_consumer.py
-cp quixstreams/internal_consumer/buffering.py  ../WatermarkingTest/croatian-burocrats/patch_buffering.py
-cp quixstreams/models/topics/manager.py        ../WatermarkingTest/croatian-burocrats/patch_manager.py
-cp quixstreams/processing/watermarking.py      ../WatermarkingTest/croatian-burocrats/patch_watermarking.py
-```
+**Always rebuild the wheel after editing source files in `C:\repos\quix-streams_4a4\`.**
 
 ---
 
@@ -168,15 +152,13 @@ app = Application(
 )
 ```
 
-**Rule**: `eos_stable_seconds` must be **greater than** `commit_interval` to avoid premature EOS seeks while another replica is still mid-commit.
-
 ---
 
 ## Key Known Bugs (already fixed in wheel)
 
 | Bug | Symptom | Fix |
 |-----|---------|-----|
-| EOS stuck | CB=0 records; `pos < high` forever on repartition partitions | `is_eos_stuck()` + 15s debounce seek in `consumer.py` / `buffering.py` |
+| EOS stuck | CB=0 records; `pos < high` forever on repartition partitions | **Unresolved** — no fix in current wheel |
 | `idle_watermark` unset | `UnboundLocalError` crash on startup, CB=0 | `idle_watermark = None` before `while` loop in `app.py` |
 | Watermarks topic N partitions | Replicas without `watermarks[0]` never receive watermark updates | `manager.py` forces watermarks topic to 1 partition |
 | Non-blocking watermarks buffer | Watermarks partition blocks data `pop()` when empty | `buffering.py` marks watermarks partition `non_blocking=True` |
@@ -215,11 +197,6 @@ C:\repos\WatermarkingTest\
   croatian-burocrats\
     main.py                            ← CB application entry point
     quixstreams-4.0.0a8-py3-none-any.whl  ← patched wheel (deploy this)
-    patch_app.py                       ← reference copy of patched app.py
-    patch_consumer.py                  ← reference copy of patched consumer.py
-    patch_buffering.py                 ← reference copy of patched buffering.py
-    patch_manager.py                   ← reference copy of patched manager.py
-    patch_watermarking.py              ← reference copy of patched watermarking.py
   croatian-burocrats-nowm\
     main.py                            ← CBNWM application (quixstreams 3.23.1, no watermarks)
 

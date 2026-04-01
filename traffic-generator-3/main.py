@@ -31,6 +31,7 @@ MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1")
 NUM_WINDOWS = int(os.environ.get("NUM_WINDOWS", "6"))
 # Real-time seconds to spread each window's messages over
 SEND_DURATION_SECONDS = float(os.environ.get("SEND_DURATION_SECONDS", "10"))
+WINDOW_SECONDS = int(os.environ.get("WINDOW_SECONDS", "10"))
 RUN_ID_PREFIX = os.environ.get("RUN_ID_PREFIX", "run")
 
 
@@ -57,9 +58,11 @@ class VehicleTrafficGeneratorV2(Source):
         window_start = datetime.now(CEST).replace(microsecond=0)
         window_start_ms = int(window_start.timestamp() * 1000)
 
+        window_ms = WINDOW_SECONDS * 1000
+
         print(f"TGSR-V2: {MESSAGES_PER_BRAND_COLOUR} msg/brand/colour, "
               f"{messages_per_window:,} msgs/window, "
-              f"{NUM_WINDOWS} windows, "
+              f"{NUM_WINDOWS} windows ({WINDOW_SECONDS}s each), "
               f"{SEND_DURATION_SECONDS}s send duration per window")
         print(f"run_id={run_id}")
 
@@ -67,7 +70,7 @@ class VehicleTrafficGeneratorV2(Source):
             if not self.running:
                 break
 
-            ws_ms = window_start_ms + window_idx * 10_000
+            ws_ms = window_start_ms + window_idx * window_ms
             tick_start = time.monotonic()
 
             # Build all messages for this window
@@ -77,7 +80,7 @@ class VehicleTrafficGeneratorV2(Source):
                     for _ in range(MESSAGES_PER_BRAND_COLOUR):
                         plate = self._generate_plate()
                         passengers = random.randint(1, 4)
-                        ts_ms = ws_ms + random.randint(0, 9999)
+                        ts_ms = ws_ms + random.randint(0, window_ms - 1)
 
                         value = {
                             "plate": plate,
@@ -109,7 +112,7 @@ class VehicleTrafficGeneratorV2(Source):
             print(f"Window {window_idx + 1}/{NUM_WINDOWS}: "
                   f"sent {len(messages):,} msgs, "
                   f"event time [{datetime.fromtimestamp(ws_ms / 1000, tz=CEST).strftime('%H:%M:%S')}"
-                  f"..{datetime.fromtimestamp((ws_ms + 10_000) / 1000, tz=CEST).strftime('%H:%M:%S')}), "
+                  f"..{datetime.fromtimestamp((ws_ms + window_ms) / 1000, tz=CEST).strftime('%H:%M:%S')}), "
                   f"took {elapsed_total:.3f}s (gen+send {elapsed:.3f}s), "
                   f"run_id={run_id}")
 
