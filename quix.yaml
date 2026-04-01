@@ -515,10 +515,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: watermarks__burocrats_watermarking_v4_v1.4--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
   - name: watermarks__burocrats_watermarking_v4_v1.5--watermarks
     configuration:
       partitions: 1
