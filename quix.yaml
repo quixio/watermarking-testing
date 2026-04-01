@@ -405,6 +405,7 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
         value: 400kMsgs
+    disabled: true
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
@@ -518,7 +519,6 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-
   - name: colours
   - name: coloursV4
   - name: coloursNoWM
