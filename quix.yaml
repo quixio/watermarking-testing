@@ -518,9 +518,7 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-      replicationFactor: 2
-      retentionInMinutes: -1
-      retentionInBytes: 524288000
+
   - name: colours
   - name: coloursV4
   - name: coloursNoWM
