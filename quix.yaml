@@ -89,7 +89,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+        value: {{QuixLakeCatURL }}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -188,7 +188,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+        value: {{QuixLakeCatURL }}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -287,7 +287,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+        value: {{QuixLakeCatURL }}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -469,7 +469,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
+        value: {{QuixLakeCatURL }}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
