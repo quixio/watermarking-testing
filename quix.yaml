@@ -513,3 +513,11 @@ deployments:
     blobStorage:
       bind: true
 
+# This section describes the Topics of the data pipeline
+topics:
+  - name: highway-2
+    configuration:
+      partitions: 4
+      replicationFactor: 2
+      retentionInMinutes: -1
+      retentionInBytes: 524288000
