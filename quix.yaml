@@ -320,10 +320,12 @@ deployments:
     variables:
       - name: QUIX_LAKE_TOKEN
         inputType: Secret
+        description: Token to authenticate against QuixLake
         required: true
         secretKey: pat
       - name: QUIXLAKE_URL
         inputType: FreeText
+        description: Base URL of the QuixLake instance
         value: https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io
     plugin:
       embeddedView:
