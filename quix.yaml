@@ -431,7 +431,7 @@ deployments:
       - name: WINDOW_SECONDS
         inputType: FreeText
         description: Duration of each event-time window in seconds
-        value: 10
+        value: 15
       - name: SEND_DURATION_SECONDS
         inputType: FreeText
         description: Real-time seconds to spread each window's messages over (pacing)
