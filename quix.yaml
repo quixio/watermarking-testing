@@ -537,6 +537,6 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
-  - name: watermarks__burocrats_watermarking_v1--watermarks
+
 
 
