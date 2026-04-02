@@ -27,6 +27,7 @@ COLOURS = [
 MESSAGES_PER_BRAND_COLOUR = int(os.environ.get("MESSAGES_PER_BRAND_COLOUR", "1"))
 RUN_ID_MIN_SECONDS = int(os.environ.get("RUN_ID_MIN_SECONDS", "20"))
 RUN_ID_MAX_SECONDS = int(os.environ.get("RUN_ID_MAX_SECONDS", "200"))
+RUN_ID_PREFIX = os.environ.get("RUN_ID_PREFIX", "run")
 
 
 class VehicleTrafficGenerator(Source):
@@ -50,7 +51,7 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = self._new_run_id()
+        run_id = "run_" + str(datetime.now(CEST)) + RUN_ID_PREFIX
         run_id_duration = random.randint(RUN_ID_MIN_SECONDS, RUN_ID_MAX_SECONDS)   # seconds before first rotation
         run_id_seconds_used = 0
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR

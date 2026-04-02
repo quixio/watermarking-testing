@@ -18,6 +18,10 @@ variables:
     inputType: FreeText
     description: Maximum number of seconds before rotating run_id
     defaultValue: 200
+  - name: RUN_ID_PREFIX
+    inputType: FreeText
+    description: Prefix used in the run_id
+    defaultValue: run
 dockerfile: dockerfile
 runEntryPoint: main.py
 defaultFile: main.py
