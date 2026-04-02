@@ -54,7 +54,7 @@ deployments:
         value: colours
       - name: consumer_group
         inputType: FreeText
-        value: test_v1
+        value: v1.1
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
         description: Consumer auto.offset.reset — "latest" protects against stale-state replay
@@ -525,3 +525,4 @@ topics:
       replicationFactor: 1
       retentionInMinutes: -1
       retentionInBytes: 524288000
+  - name: colours
