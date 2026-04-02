@@ -532,3 +532,7 @@ topics:
       partitions: 1
       cleanupPolicy: Compact
   - name: coloursV4
+  - name: watermarks__burocrats_watermarking_v4_test_v1--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
