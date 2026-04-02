@@ -527,3 +527,7 @@ topics:
       retentionInBytes: 524288000
   - name: coloursNoWM
   - name: colours
+  - name: watermarks__burocrats_watermarking_test_v1--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
