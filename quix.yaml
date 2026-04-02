@@ -519,7 +519,4 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: highway-2
-    configuration:
-      partitions: 4
   - name: test
