@@ -32,6 +32,7 @@ deployments:
         inputType: FreeText
         description: Maximum number of seconds before rotating run_id
         value: 15
+    disabled: true
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
