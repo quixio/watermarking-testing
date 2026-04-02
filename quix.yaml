@@ -522,5 +522,4 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-  - name: coloursV4
   - name: test
