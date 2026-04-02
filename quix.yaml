@@ -88,7 +88,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixdev-quixlakev2-dev.deployments-dev.quix.io
+        value: {{QuixLakeCatURL}}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -157,7 +157,7 @@ deployments:
         value: coloursNoWM
       - name: consumer_group
         inputType: FreeText
-        value: test_v1
+        value: {{consumer_group}}
   - name: CarColoursDataLakeNoWM
     application: carcoloursdatalakenowm
     version: latest
@@ -187,7 +187,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixdev-quixlakev2-dev.deployments-dev.quix.io
+        value: {{QuixLakeCatURL}}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -256,7 +256,7 @@ deployments:
         value: coloursV4
       - name: consumer_group
         inputType: FreeText
-        value: test_v1
+        value: {{consumer_group}}
   - name: CarColoursDataLake V4
     application: carcoloursdatalake-v4
     version: latest
@@ -286,7 +286,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixdev-quixlakev2-dev.deployments-dev.quix.io
+        value: {{QuixLakeCatURL}}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
@@ -469,7 +469,7 @@ deployments:
       - name: CATALOG_URL
         inputType: FreeText
         description: REST Catalog URL for optional table registration (leave empty to skip)
-        value: https://iceberg-catalog-quixdev-quixlakev2-dev.deployments-dev.quix.io
+        value: {{QuixLakeCatURL}}
       - name: CATALOG_AUTH_TOKEN
         inputType: Secret
         description: If using a catalog, the respective auth token to access it
