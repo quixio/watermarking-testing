@@ -523,5 +523,4 @@ topics:
     configuration:
       partitions: 4
   - name: coloursV4
-  - name: coloursNoWM
   - name: test
