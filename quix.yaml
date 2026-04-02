@@ -522,7 +522,6 @@ topics:
   - name: highway-2
     configuration:
       partitions: 4
-  - name: colours
   - name: coloursV4
   - name: coloursNoWM
   - name: test
