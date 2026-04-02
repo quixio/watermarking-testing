@@ -54,7 +54,7 @@ deployments:
         value: colours
       - name: consumer_group
         inputType: FreeText
-        value: v1.1
+        value: {{consumer_group}}
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
         description: Consumer auto.offset.reset — "latest" protects against stale-state replay
