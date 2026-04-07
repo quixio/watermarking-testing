@@ -131,9 +131,9 @@ def _(mo):
 def _(client):
     import pandas as pd
 
-    q_wm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_vx1 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
-    q_nowm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_nowm1 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
-    q_v4 = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_v4 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
+    q_wm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_vx1 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
+    q_nowm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_nowm1 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
+    q_v4 = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_v4 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
 
     df_wm = client.query(q_wm)
     df_nowm = client.query(q_nowm)
@@ -156,7 +156,6 @@ def _(client):
     merged["parsed_ts"] = merged["run_id"].apply(extract_ts)
 
     merged
-
 
 
 
