@@ -46,119 +46,68 @@ def _(QuixLakeClient, os):
 
 @app.cell
 def _(mo):
-    # TODO: Modify the SQL query for your data
-    default_query = """
-    SELECT 
-      watermarking.run_id,
-      count(watermarking.count) as "watermarking count",
-      count(nowatermarking.count) as "nowatermarking count",
-      abs(max(watermarking.count)-min(watermarking.count)) as "watermaking", 
-      abs(max(nowatermarking.count)-min(nowatermarking.count)) as "nowatermarking", 
-
-    FROM carcoloursnomwv3 as nowatermarking
-    LEFT OUTER JOIN carcoloursv3 as watermarking ON watermarking.run_id == nowatermarking.run_id
-    GROUP BY watermarking.run_id
-    ORDER BY run_id DESC
-    LIMIT 10
-
-
-    """.strip()
-
-    sql_form = mo.ui.code_editor(
-        value=default_query,
-        language="sql",
-        label="SQL query",
-        min_height=150,
-    )
-
-    sql_form
-    return (sql_form,)
+    load_btn = mo.ui.run_button(label="Load Data")
+    mo.vstack([load_btn])
+    return (load_btn,)
 
 
 @app.cell
-def _(client, sql_form):
-    df = client.query(sql_form.value)
-    df
+def _(client, load_btn, mo):
+    mo.stop(not load_btn.value, mo.md("*Click **Load Data** to fetch results.*"))
+
+    query = """
+          SELECT
+            wm.run_id,
+            wm.wm_count          AS "watermarking count",
+            nowm.nowm_count       AS "nowatermarking count",
+            v4.v4_count           AS "v4 count",
+            wm.wm_sum             AS "watermarking sum",
+            nowm.nowm_sum         AS "nowatermarking sum",
+            v4.v4_sum             AS "v4 sum",
+            wm.wm_range           AS "watermarking",
+            nowm.nowm_range       AS "nowatermarking",
+            v4.v4_range           AS "v4"
+          FROM (
+            SELECT
+              run_id,
+              count(*)                     AS wm_count,
+              sum(count)                   AS wm_sum,
+              abs(max(count) - min(count)) AS wm_range
+            FROM carcolours_vx1
+            GROUP BY run_id
+          ) AS wm
+          JOIN (
+            SELECT
+              run_id,
+              count(*)                     AS nowm_count,
+              sum(count)                   AS nowm_sum,
+              abs(max(count) - min(count)) AS nowm_range
+            FROM carcolours_nowm1
+            GROUP BY run_id
+          ) AS nowm ON wm.run_id = nowm.run_id
+          JOIN (
+            SELECT
+              run_id,
+              count(*)                     AS v4_count,
+              sum(count)                   AS v4_sum,
+              abs(max(count) - min(count)) AS v4_range
+            FROM carcolours_v4
+            GROUP BY run_id
+          ) AS v4 ON wm.run_id = v4.run_id
+          ORDER BY wm.run_id DESC
+          LIMIT 100
+          """
+
+    df = client.query(query)
     return (df,)
 
 
 @app.cell
-def _():
-    import altair as alt
-
-    return (alt,)
-
-
-@app.cell
-def _(alt, df):
-    # Create base chart
-    _base_chart = alt.Chart(df).add_selection(
-        alt.selection_interval()
-    ).properties(
-        width=700,
-        height=400,
-        title='Watermarking Metrics and Count by Run ID'
-    )
-
-    # Left axis - watermarking metrics starting from 0
-    _left_axis_chart = _base_chart.transform_fold(
-        ['watermaking', 'nowatermarking'],
-        as_=['metric_type', 'difference_value']
-    ).mark_line(
-        point=True,
-        strokeWidth=3
-    ).encode(
-        x=alt.X('run_id:O', 
-                title='Run ID',
-                axis=alt.Axis(labelAngle=45)),
-        y=alt.Y('difference_value:Q', 
-                title='Count Difference (Left Axis)',
-                scale=alt.Scale(domain=[0, df[['watermaking', 'nowatermarking']].max().max() * 1.1], zero=True)),
-        color=alt.Color('metric_type:N', 
-                       title='Metric Type',
-                       scale=alt.Scale(
-                           domain=['watermaking', 'nowatermarking'],
-                           range=['#1f77b4', '#ff7f0e']
-                       )),
-        tooltip=['run_id:O', 'metric_type:N', 'difference_value:Q']
-    )
-
-    # Right axis - watermarking count and nowatermarking count
-    _right_axis_chart = _base_chart.transform_fold(
-        ['watermarking count', 'nowatermarking count'],
-        as_=['count_type', 'count_value']
-    ).mark_line(
-        point=True,
-        strokeWidth=3,
-        strokeDash=[5, 5]
-    ).encode(
-        x=alt.X('run_id:O'),
-        y=alt.Y('count_value:Q', 
-                title='Count (Right Axis)',
-                scale=alt.Scale(
-                    domain=[
-                        df[['watermarking count', 'nowatermarking count']].min().min() * 0.95,
-                        df[['watermarking count', 'nowatermarking count']].max().max() * 1.05
-                    ]
-                )),
-        color=alt.Color('count_type:N', 
-                       title='Metric Type',
-                       scale=alt.Scale(
-                           domain=['watermarking count', 'nowatermarking count'],
-                           range=['#d62728', '#2ca02c']
-                       )),
-        tooltip=['run_id:O', 'count_type:N', 'count_value:Q']
-    )
-
-    # Layer the charts with independent y-scales
-    chart = alt.layer(
-        _left_axis_chart,
-        _right_axis_chart
-    ).resolve_scale(
-        y='independent'
-    ).interactive()
-
-    chart
+def _(df, mo):
+    mo.vstack([
+              mo.md(f"## Results ({len(df)} rows)"),
+              mo.ui.table(df, selection=None, page_size=20),
+        ])
     return
 
 
