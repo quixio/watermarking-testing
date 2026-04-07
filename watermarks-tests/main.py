@@ -111,80 +111,79 @@ def _(df, mo):
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(mo):
     date_from = mo.ui.date(label="From date", value="2026-04-01")
-          date_to = mo.ui.date(label="To date", value="2026-04-07")
-          time_from = mo.ui.text(value="00:00:00", label="From time")
-          time_to = mo.ui.text(value="23:59:59", label="To time")
-          filter_btn = mo.ui.run_button(label="Filter by Time Window")
+    date_to = mo.ui.date(label="To date", value="2026-04-07")
+    time_from = mo.ui.text(value="00:00:00", label="From time")
+    time_to = mo.ui.text(value="23:59:59", label="To time")
+    filter_btn = mo.ui.run_button(label="Filter by Time Window")
 
     mo.vstack([
               mo.md("## Filter by Time Window"),
               mo.hstack([date_from, time_from, date_to, time_to], justify="start", gap=1),
               filter_btn,
     ])
-    """,
-    name="_"
-)
-
-
-app._unparsable_cell(
-    r"""
-    import re
-    from datetime import datetime
-
-    mo.stop(not filter_btn.value, mo.md("*Click **Filter by Time Window** to filter results.*"))
-
-    dt_from = datetime.strptime(f"{date_from.value} {time_from.value}", "%Y-%m-%d %H:%M:%S")
-    dt_to = datetime.strptime(f"{date_to.value} {time_to.value}", "%Y-%m-%d %H:%M:%S")
-
-    def extract_ts(run_id):
-      m = re.search(r'run_(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', str(run_id))
-      if m:
-          return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
-      return None
-
-    filtered = df.copy()
-    filtered["_ts"] = filtered["run_id"].apply(extract_ts)
-    filtered = filtered[filtered["_ts"].notna()]
-    filtered = filtered[(filtered["_ts"] >= dt_from) & (filtered["_ts"] <= dt_to)]
-    filtered = filtered.drop(columns=["_ts"])
-
-    return (filtered,)
-    """,
-    name="_"
-)
+    return
 
 
 @app.cell
-def _(filtered, mo):
-    if len(filtered) == 0:
-      mo.output.replace(mo.md("*No runs found in this time window.*"))
-    else:
-      summary = {
-          "metric": ["watermarking", "nowatermarking", "v4"],
-          "total sum": [
-              filtered["watermarking sum"].sum(),
-              filtered["nowatermarking sum"].sum(),
-              filtered["v4 sum"].sum(),
-          ],
-          "total count (rows)": [
-              filtered["watermarking count"].sum(),
-              filtered["nowatermarking count"].sum(),
-              filtered["v4 count"].sum(),
-          ],
-          "runs": [len(filtered)] * 3,
-      }
-      import pandas as pd
-      summary_df = pd.DataFrame(summary)
+def _():
+    return
 
-      mo.vstack([
-          mo.md(f"## Time Window Summary ({len(filtered)} runs)"),
-          mo.ui.table(summary_df, selection=None),
-          mo.md("### Filtered Runs"),
-          mo.ui.table(filtered, selection=None, page_size=20),
-      ])
+
+@app.cell
+def _(client):
+    import pandas as pd
+
+    q_wm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_vx1 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
+    q_nowm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_nowm1 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
+    q_v4 = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_v4 GROUP BY run_id ORDER BY run_id DESC LIMIT 20"
+
+    df_wm = client.query(q_wm)
+    df_nowm = client.query(q_nowm)
+    df_v4 = client.query(q_v4)
+
+    df_wm = df_wm.rename(columns={"cnt": "wm_cnt", "total": "wm_total"})
+    df_nowm = df_nowm.rename(columns={"cnt": "nowm_cnt", "total": "nowm_total"})
+    df_v4 = df_v4.rename(columns={"cnt": "v4_cnt", "total": "v4_total"})
+
+    merged = df_wm.merge(df_nowm, on="run_id", how="outer").merge(df_v4, on="run_id", how="outer")
+    merged = merged.sort_values("run_id", ascending=False).reset_index(drop=True)
+
+    import re
+    from datetime import datetime
+
+    def extract_ts(run_id):
+      m = re.search(r'run_(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', str(run_id))
+      return m.group(1) if m else "NO MATCH"
+
+    merged["parsed_ts"] = merged["run_id"].apply(extract_ts)
+
+    merged
+
+
+
+
+    return (re,)
+
+
+@app.cell
+def _(df, re):
+    sample = df["run_id"].head(5).tolist()
+
+    results = []
+    for rid in sample:
+      m = re.search(r'run_(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', str(rid))
+      results.append({"run_id": rid, "match": m.group(1) if m else "NO MATCH"})
+
+    import pandas as pd
+    pd.DataFrame(results)
+    return
+
+
+@app.cell
+def _():
     return
 
 
