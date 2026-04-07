@@ -5,7 +5,7 @@
 
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.22.4"
 app = marimo.App(width="full")
 
 
@@ -35,7 +35,7 @@ def _(mo):
 @app.cell
 def _(QuixLakeClient, os):
     # TODO: Replace with your QuixLake URL
-    QUIXLAKE_URL = "https://quixlake-quixers-testrigdemodatawarehouse-prod.az-france-0.app.quix.io"
+    QUIXLAKE_URL = "https://quixlake-quixdev-quixlakev2-dev.deployments-dev.quix.io"
 
     client = QuixLakeClient(
         base_url=QUIXLAKE_URL,
