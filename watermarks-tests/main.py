@@ -120,9 +120,9 @@ def _(mo):
     filter_btn = mo.ui.run_button(label="Filter by Time Window")
 
     mo.vstack([
-              mo.md("## Filter by Time Window"),
-              mo.hstack([date_from, time_from, date_to, time_to], justify="start", gap=1),
-              filter_btn,
+      mo.md("## Filter by Time Window"),
+      mo.hstack([date_from, time_from, date_to, time_to], justify="start", gap=1),
+      filter_btn,
     ])
     return
 
