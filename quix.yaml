@@ -531,3 +531,4 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
+  - name: highway-2
