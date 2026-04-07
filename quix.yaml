@@ -35,7 +35,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id
-        value: 400MsgContRunGroupById
+        value: 400MsgAppSwtWM
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
@@ -61,7 +61,7 @@ deployments:
         value: {{consumer_group}}
       - name: WATERMARK_FEATURE
         inputType: FreeText
-        description: "enable or disable watermarking (enable/disable)"
+        description: enable or disable watermarking (enable/disable)
         value: enable
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
