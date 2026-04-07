@@ -128,11 +128,6 @@ def _(mo):
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
 def _(client):
     import pandas as pd
 
@@ -165,11 +160,11 @@ def _(client):
 
 
 
-    return (re,)
+    return pd, re
 
 
 @app.cell
-def _(df, re):
+def _(df, pd, re):
     sample = df["run_id"].head(5).tolist()
 
     results = []
@@ -177,7 +172,6 @@ def _(df, re):
       m = re.search(r'run_(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', str(rid))
       results.append({"run_id": rid, "match": m.group(1) if m else "NO MATCH"})
 
-    import pandas as pd
     pd.DataFrame(results)
     return
 
