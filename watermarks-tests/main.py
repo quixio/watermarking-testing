@@ -111,5 +111,82 @@ def _(df, mo):
     return
 
 
+app._unparsable_cell(
+    r"""
+    date_from = mo.ui.date(label="From date", value="2026-04-01")
+          date_to = mo.ui.date(label="To date", value="2026-04-07")
+          time_from = mo.ui.text(value="00:00:00", label="From time")
+          time_to = mo.ui.text(value="23:59:59", label="To time")
+          filter_btn = mo.ui.run_button(label="Filter by Time Window")
+
+    mo.vstack([
+              mo.md("## Filter by Time Window"),
+              mo.hstack([date_from, time_from, date_to, time_to], justify="start", gap=1),
+              filter_btn,
+    ])
+    """,
+    name="_"
+)
+
+
+app._unparsable_cell(
+    r"""
+    import re
+    from datetime import datetime
+
+    mo.stop(not filter_btn.value, mo.md("*Click **Filter by Time Window** to filter results.*"))
+
+    dt_from = datetime.strptime(f"{date_from.value} {time_from.value}", "%Y-%m-%d %H:%M:%S")
+    dt_to = datetime.strptime(f"{date_to.value} {time_to.value}", "%Y-%m-%d %H:%M:%S")
+
+    def extract_ts(run_id):
+      m = re.search(r'run_(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', str(run_id))
+      if m:
+          return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
+      return None
+
+    filtered = df.copy()
+    filtered["_ts"] = filtered["run_id"].apply(extract_ts)
+    filtered = filtered[filtered["_ts"].notna()]
+    filtered = filtered[(filtered["_ts"] >= dt_from) & (filtered["_ts"] <= dt_to)]
+    filtered = filtered.drop(columns=["_ts"])
+
+    return (filtered,)
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _(filtered, mo):
+    if len(filtered) == 0:
+      mo.output.replace(mo.md("*No runs found in this time window.*"))
+    else:
+      summary = {
+          "metric": ["watermarking", "nowatermarking", "v4"],
+          "total sum": [
+              filtered["watermarking sum"].sum(),
+              filtered["nowatermarking sum"].sum(),
+              filtered["v4 sum"].sum(),
+          ],
+          "total count (rows)": [
+              filtered["watermarking count"].sum(),
+              filtered["nowatermarking count"].sum(),
+              filtered["v4 count"].sum(),
+          ],
+          "runs": [len(filtered)] * 3,
+      }
+      import pandas as pd
+      summary_df = pd.DataFrame(summary)
+
+      mo.vstack([
+          mo.md(f"## Time Window Summary ({len(filtered)} runs)"),
+          mo.ui.table(summary_df, selection=None),
+          mo.md("### Filtered Runs"),
+          mo.ui.table(filtered, selection=None, page_size=20),
+      ])
+    return
+
+
 if __name__ == "__main__":
     app.run()
