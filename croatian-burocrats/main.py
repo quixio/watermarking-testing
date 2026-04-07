@@ -34,7 +34,7 @@ def main():
         commit_every=1000,
         max_partition_buffer_size=10000,
         commit_interval=10,
-        watermarking_enabled=wm_enabled,
+        watermarking_enabled=wm_enabled
     )
 
     input_topic = app.topic(
