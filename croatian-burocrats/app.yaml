@@ -15,6 +15,11 @@ variables:
     inputType: FreeText
     multiline: false
     defaultValue: v1
+  - name: WATERMARK_FEATURE
+    inputType: FreeText
+    multiline: false
+    description: "enable or disable watermarking (enable/disable)"
+    defaultValue: enable
   - name: AUTO_OFFSET_RESET
     inputType: FreeText
     multiline: false

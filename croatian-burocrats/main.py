@@ -20,16 +20,21 @@ def main():
     def ts_extractor(value, _headers, _timestamp, _timestamp_type) -> int:
         return value["ts"]
 
+    watermark_feature = os.environ.get("WATERMARK_FEATURE", "enable").lower()
+    wm_enabled = watermark_feature == "enable"
+    cg_prefix = "watermarking" if wm_enabled else "no_watermarking"
+
     # All replicas share the same consumer group so Kafka distributes
     # partitions between them automatically.
     app = Application(
-        consumer_group="burocrats_watermarking_" + os.environ["consumer_group"],
+        consumer_group=f"burocrats_{cg_prefix}_vX_{os.environ['consumer_group']}",
         auto_create_topics=True,
         auto_offset_reset=os.environ.get("AUTO_OFFSET_RESET", "earliest"),
         processing_guarantee="exactly-once",
         commit_every=1000,
         max_partition_buffer_size=10000,
         commit_interval=10,
+        watermarking_enabled=wm_enabled,
     )
 
     input_topic = app.topic(
