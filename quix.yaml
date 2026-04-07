@@ -35,7 +35,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id
-        value: 240kMsgContRunAftRst
+        value: 240kMsgContRunGroupById
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
