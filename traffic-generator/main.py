@@ -45,7 +45,7 @@ class VehicleTrafficGenerator(Source):
         return f"{prefix}-{self._plate_counter:05d}"
 
     def _new_run_id(self):
-        return "run_" + str(datetime.now(timezone(timedelta(hours=2))))  + RUN_ID_PREFIX
+        return "run_" + str(datetime.now(timezone(timedelta(hours=2)))) + RUN_ID_PREFIX
 
     def run(self):
         self._plate_counter = 0
