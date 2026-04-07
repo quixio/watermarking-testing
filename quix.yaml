@@ -529,3 +529,7 @@ deployments:
 topics:
   - name: highway-2
   - name: colours
+  - name: watermarks__burocrats_watermarking_vX_v1.5--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
