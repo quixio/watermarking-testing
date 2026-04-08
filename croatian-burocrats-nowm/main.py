@@ -31,7 +31,7 @@ def main():
     # partitions between them automatically.
     app = Application(
         consumer_group="burocrats_no_watermarking_" + os.environ["consumer_group"],
-        auto_create_topics=True,
+        auto_create_topics=True, 
         auto_offset_reset="earliest",
         processing_guarantee="exactly-once",
         max_partition_buffer_size=10000,
@@ -60,7 +60,7 @@ def main():
         sdf
         .tumbling_window(duration_ms=timedelta(seconds=10), grace_ms=timedelta(seconds=10))
         .agg(count=Count(), run_id=First("run_id"))
-        .final()
+        .final(closing_strategy="partition")
     )
 
     sdf.print_table()
