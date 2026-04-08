@@ -527,7 +527,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: highway-2
   - name: watermarks__burocrats_watermarking_v4_v1.1--watermarks
     configuration:
       partitions: 1
