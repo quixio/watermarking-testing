@@ -564,6 +564,41 @@ deployments:
         show: true
         icon: note_alt
         badge: BETA
+  - name: producer_test
+    application: producer_test
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 1000
+      memory: 2000
+      replicas: 1
+    publicAccess:
+      enabled: true
+      urlPrefix: producer-test-53d57c4
+    variables:
+      - name: MARIMO_MODE
+        inputType: FreeText
+        description: Mode to run Marimo in
+        value: edit
+      - name: MARIMO_NOTEBOOK
+        inputType: FreeText
+        description: The notebook file to open (e.g., main.py)
+        value: main.py
+      - name: ANTHROPIC_API_KEY
+        inputType: Secret
+        description: Token generated from https://platform.claude.com/settings/keys.
+      - name: QUIX_LAKE_TOKEN
+        inputType: Secret
+        required: true
+        secretKey: pat
+    plugin:
+      embeddedView:
+        enabled: true
+        hideHeader: true
+        default: true
+      sidebarItem:
+        show: true
+        order: 0
 
 # This section describes the Topics of the data pipeline
 topics:
