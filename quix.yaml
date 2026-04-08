@@ -603,6 +603,31 @@ deployments:
       sidebarItem:
         show: true
         order: 0
+  - name: JupyterLab
+    application: jupyterlab
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 500
+      memory: 2000
+      replicas: 1
+    publicAccess:
+      enabled: true
+      urlPrefix: jupyterlab
+    state:
+      enabled: true
+      size: 1
+    network:
+      serviceName: jupyterlab
+      ports:
+        - port: 80
+          targetPort: 8888
+    variables:
+      - name: JUPYTER_PASSWORD
+        inputType: Secret
+        description: The allowed password for connecting to JupyterLab
+        required: true
+        secretKey: jupyterlab
 
 # This section describes the Topics of the data pipeline
 topics:
