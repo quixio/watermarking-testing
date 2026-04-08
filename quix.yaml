@@ -527,7 +527,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: colours
   - name: coloursNoWM
   - name: coloursV4
   - name: highway-2
