@@ -531,7 +531,6 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
-  - name: colours
   - name: coloursNoWM
   - name: highway-2
     configuration:
