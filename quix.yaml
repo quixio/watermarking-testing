@@ -645,3 +645,7 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
+  - name: watermarks__burocrats_watermarking_vX_v1.1--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
