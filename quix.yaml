@@ -527,7 +527,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: coloursNoWM
   - name: coloursV4
   - name: highway-2
     configuration:
@@ -539,3 +538,4 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
+  - name: colours
