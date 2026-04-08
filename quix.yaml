@@ -538,4 +538,4 @@ topics:
     configuration:
       partitions: 1
       cleanupPolicy: Compact
-  - name: coloursNoWM
+  - name: colours
