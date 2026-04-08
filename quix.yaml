@@ -629,3 +629,6 @@ deployments:
         required: true
         secretKey: jupyterlab
 
+# This section describes the Topics of the data pipeline
+topics:
+  - name: coloursV4
