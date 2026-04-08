@@ -51,7 +51,7 @@ def main():
     sdf = sdf[sdf.contains("run_id")]
 
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
-    sdf = sdf.group_by("colour")
+    sdf = sdf.group_by(lambda row: f"{row['run_id']}:{row['colour']}", name="group-by-colour")
 
     # group_by repartitions via an internal Kafka topic and stamps messages with
     # broker time, losing the original event time.  Re-apply it from value["ts"]
