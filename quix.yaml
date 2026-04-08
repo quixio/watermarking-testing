@@ -575,6 +575,10 @@ deployments:
     publicAccess:
       enabled: true
       urlPrefix: producer-test-53d57c4
+    network:
+      ports:
+        - port: 80
+          targetPort: 8001
     variables:
       - name: MARIMO_MODE
         inputType: FreeText
