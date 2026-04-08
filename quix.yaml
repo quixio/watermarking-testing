@@ -529,3 +529,9 @@ deployments:
 topics:
   - name: colours
   - name: coloursNoWM
+  - name: highway-2
+    configuration:
+      partitions: 4
+      replicationFactor: 1
+      retentionInMinutes: -1
+      retentionInBytes: 524288000
