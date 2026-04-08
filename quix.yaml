@@ -540,3 +540,7 @@ topics:
       retentionInMinutes: -1
       retentionInBytes: 524288000
   - name: coloursV4
+  - name: watermarks__burocrats_watermarking_v4_v1.0--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
