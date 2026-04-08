@@ -640,3 +640,4 @@ topics:
       retentionInBytes: 524288000
   - name: watermarks__burocrats_watermarking_v1--watermarks
   - name: coloursNoWM
+  - name: colours
