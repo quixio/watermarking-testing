@@ -412,7 +412,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: _400MsgsPerSecWMDisPart9
+        value: _400MsgsPerSecWMEnaPart9
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
