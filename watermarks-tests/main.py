@@ -5,7 +5,7 @@
 
 import marimo
 
-__generated_with = "0.22.4"
+__generated_with = "0.22.5"
 app = marimo.App(width="full")
 
 
@@ -39,7 +39,7 @@ def _(QuixLakeClient, os):
 
     client = QuixLakeClient(
         base_url=QUIXLAKE_URL,
-        token=os.environ["QUIX_LAKE_TOKEN"]
+        token=os.environ["QUIX_LAKE_TOKEN"],timeout=300
     )
     return (client,)
 
@@ -73,7 +73,7 @@ def _(client, load_btn, mo):
               count(*)                     AS wm_count,
               sum(count)                   AS wm_sum,
               abs(max(count) - min(count)) AS wm_range
-            FROM carcolours_vx1
+            FROM carcolours_vx2
             GROUP BY run_id
           ) AS wm
           JOIN (
@@ -82,7 +82,7 @@ def _(client, load_btn, mo):
               count(*)                     AS nowm_count,
               sum(count)                   AS nowm_sum,
               abs(max(count) - min(count)) AS nowm_range
-            FROM carcolours_nowm1
+            FROM carcolours_nowm2
             GROUP BY run_id
           ) AS nowm ON wm.run_id = nowm.run_id
           JOIN (
@@ -91,7 +91,7 @@ def _(client, load_btn, mo):
               count(*)                     AS v4_count,
               sum(count)                   AS v4_sum,
               abs(max(count) - min(count)) AS v4_range
-            FROM carcolours_v4
+            FROM carcolours_v4_2
             GROUP BY run_id
           ) AS v4 ON wm.run_id = v4.run_id
           ORDER BY wm.run_id DESC
@@ -131,9 +131,9 @@ def _(mo):
 def _(client):
     import pandas as pd
 
-    q_wm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_vx1 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
-    q_nowm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_nowm1 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
-    q_v4 = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_v4 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
+    q_wm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_vx2 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
+    q_nowm = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_nowm2 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
+    q_v4 = "SELECT run_id, count(*) as cnt, sum(count) as total FROM carcolours_v4_2 GROUP BY run_id ORDER BY run_id DESC LIMIT 50"
 
     df_wm = client.query(q_wm)
     df_nowm = client.query(q_nowm)
@@ -156,7 +156,6 @@ def _(client):
     merged["parsed_ts"] = merged["run_id"].apply(extract_ts)
 
     merged
-
 
 
     return pd, re
