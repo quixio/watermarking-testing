@@ -1,0 +1,20 @@
+name: producer_test
+language: docker
+variables:
+  - name: MARIMO_MODE
+    inputType: FreeText
+    description: Mode to run Marimo in
+    defaultValue: edit
+  - name: MARIMO_NOTEBOOK
+    inputType: FreeText
+    description: The notebook file to open (e.g., main.py)
+    defaultValue: main.py
+  - name: ANTHROPIC_API_KEY
+    inputType: Secret
+    description: Token generated from https://platform.claude.com/settings/keys.
+  - name: QUIX_LAKE_TOKEN
+    inputType: Secret
+    multiline: false
+    required: true
+dockerfile: dockerfile
+defaultFile: dockerfile
