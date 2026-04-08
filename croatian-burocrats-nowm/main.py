@@ -33,10 +33,7 @@ def main():
         consumer_group="burocrats_no_watermarking_" + os.environ["consumer_group"],
         auto_create_topics=True, 
         auto_offset_reset="earliest",
-        processing_guarantee="exactly-once",
-        commit_every=1000,
-        max_partition_buffer_size=10000,
-        commit_interval=10
+        processing_guarantee="exactly-once"
     )
 
     input_topic = app.topic(
