@@ -525,9 +525,3 @@ deployments:
     blobStorage:
       bind: true
 
-# This section describes the Topics of the data pipeline
-topics:
-  - name: watermarks__burocrats_watermarking_vX_v1.0--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
