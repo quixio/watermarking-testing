@@ -527,9 +527,6 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
-  - name: watermarks__burocrats_watermarking_v4_v1.7--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
   - name: colours
   - name: coloursNoWM
+  - name: coloursV4
