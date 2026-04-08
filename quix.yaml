@@ -412,7 +412,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: _4kMsgsWMDisableFlush
+        value: _400MsgsPerSecWMDisable
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
