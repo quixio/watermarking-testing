@@ -36,7 +36,6 @@ deployments:
         inputType: FreeText
         description: Prefix used in the run_id
         value: 400MsgAppSwtWM
-    disabled: true
   - name: Croatian Burocrats
     application: croatian-burocrats
     version: latest
