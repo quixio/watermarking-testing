@@ -408,7 +408,7 @@ deployments:
       - name: RUN_DURATION_SECONDS
         inputType: FreeText
         description: Total number of seconds to generate traffic before stopping
-        value: 10
+        value: 60
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
