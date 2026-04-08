@@ -63,7 +63,7 @@ deployments:
       - name: WATERMARK_FEATURE
         inputType: FreeText
         description: enable or disable watermarking (enable/disable)
-        value: disable
+        value: enable
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
         description: Consumer auto.offset.reset — "latest" protects against stale-state replay
