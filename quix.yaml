@@ -63,7 +63,7 @@ deployments:
       - name: WATERMARK_FEATURE
         inputType: FreeText
         description: enable or disable watermarking (enable/disable)
-        value: disable
+        value: enable
       - name: AUTO_OFFSET_RESET
         inputType: FreeText
         description: Consumer auto.offset.reset — "latest" protects against stale-state replay
@@ -412,7 +412,7 @@ deployments:
       - name: RUN_ID_PREFIX
         inputType: FreeText
         description: Prefix used in the run_id (replaces the hardcoded "run" part)
-        value: _400MsgsPerSecWMDisPart9
+        value: _400MsgsPerSecWMEnaPart9
   - name: Traffic Generator V2
     application: traffic-generator-3
     version: latest
@@ -631,29 +631,21 @@ deployments:
 
 # This section describes the Topics of the data pipeline
 topics:
+  - name: coloursV4
   - name: highway-2
     configuration:
       partitions: 4
       replicationFactor: 1
       retentionInMinutes: -1
       retentionInBytes: 524288000
-  - name: colours
-  - name: coloursNoWM
-  - name: coloursV4
-  - name: watermarks__burocrats_watermarking_v4_v1.4--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
-  - name: watermarks__burocrats_watermarking_vX_v1.4--watermarks
-    configuration:
-      partitions: 1
-      cleanupPolicy: Compact
   - name: watermarks__burocrats_watermarking_v1--watermarks
-  - name: watermarks__burocrats_watermarking_vX_v1.0--watermarks
+  - name: coloursNoWM
+  - name: colours
+  - name: watermarks__burocrats_watermarking_v4_v1.1--watermarks
     configuration:
       partitions: 1
       cleanupPolicy: Compact
-  - name: watermarks__burocrats_watermarking_v4_v1.0--watermarks
+  - name: watermarks__burocrats_watermarking_vX_v1.1--watermarks
     configuration:
       partitions: 1
       cleanupPolicy: Compact
