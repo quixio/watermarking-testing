@@ -1,17 +1,14 @@
 # import the Quix Streams modules for interacting with Kafka.
 # For general info, see https://quix.io/docs/quix-streams/introduction.html
-from datetime import timedelta
-from quixstreams import Application
-
-import os
 import logging
-import threading
-import time
-from collections import defaultdict
-from quixstreams.dataframe.windows import Count, First
+import os
+from datetime import timedelta
 
 # for local dev, load env vars from a .env file
 from dotenv import load_dotenv
+from quixstreams import Application
+from quixstreams.dataframe.windows import Count, First
+
 load_dotenv()
 
 logging.basicConfig(
@@ -31,9 +28,9 @@ def main():
     # partitions between them automatically.
     app = Application(
         consumer_group="burocrats_no_watermarking_" + os.environ["consumer_group"],
-        auto_create_topics=True, 
+        auto_create_topics=True,
         auto_offset_reset="earliest",
-        processing_guarantee="exactly-once"
+        processing_guarantee="exactly-once",
     )
 
     input_topic = app.topic(
@@ -48,7 +45,9 @@ def main():
     sdf = sdf[sdf.contains("run_id")]
 
     # Loop 2: repartition by colour and compute per-second tumbling window counts.
-    sdf = sdf.group_by(lambda row: f"{row['run_id']}:{row['colour']}", name="group-by-colour")
+    sdf = sdf.group_by(
+        lambda row: f"{row['run_id']}:{row['colour']}", name="group-by-colour"
+    )
 
     # group_by repartitions via an internal Kafka topic and stamps messages with
     # broker time, losing the original event time.  Re-apply it from value["ts"]
@@ -56,14 +55,15 @@ def main():
     sdf = sdf.set_timestamp(lambda row, *_: row["ts"])
 
     sdf = (
-        sdf
-        .tumbling_window(duration_ms=timedelta(seconds=10), grace_ms=timedelta(seconds=10))
+        sdf.tumbling_window(
+            duration_ms=timedelta(seconds=10), grace_ms=timedelta(seconds=10)
+        )
         .agg(count=Count(), run_id=First("run_id"))
         .final(closing_strategy="partition")
     )
 
     sdf.print_table()
-    
+
     sdf.to_topic(output_topic)
 
     # With our pipeline defined, now run the Application
