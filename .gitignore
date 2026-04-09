@@ -4,3 +4,18 @@ compose.local.yaml
 .venv/
 certificates/
 .quix.yaml.variables
+
+# Auto-added by DevSession (hidden in VS Code explorer)
+.claude
+.git
+.vscode
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.ipynb_checkpoints
+build
+dist
+state
