@@ -19,6 +19,7 @@ def main():
     # This ensures windowing is driven by event time, not Kafka broker time.
     def ts_extractor(value, _headers, _timestamp, _timestamp_type) -> int:
         return value["ts"]
+        
 
     watermark_feature = os.environ.get("WATERMARK_FEATURE", "enable").lower()
     wm_enabled = watermark_feature == "enable"
