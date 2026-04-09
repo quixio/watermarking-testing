@@ -640,3 +640,7 @@ topics:
   - name: coloursNoWM
   - name: coloursV4
   - name: colours
+  - name: watermarks__burocrats_watermarking_v4_v1.4--watermarks
+    configuration:
+      partitions: 1
+      cleanupPolicy: Compact
