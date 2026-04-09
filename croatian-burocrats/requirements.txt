@@ -1,2 +1,2 @@
-git+https://github.com/quixio/quix-streams@wm-fix-v6
+git+https://github.com/quixio/quix-streams@wm-fix-v7
 python-dotenv
