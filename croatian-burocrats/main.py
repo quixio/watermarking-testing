@@ -31,7 +31,7 @@ def main():
         auto_create_topics=True,
         auto_offset_reset=os.environ.get("AUTO_OFFSET_RESET", "earliest"),
         processing_guarantee="exactly-once",
-        watermarking_enabled=wm_enabled
+        #watermarking_enabled=wm_enabled
     )
 
     input_topic = app.topic(
