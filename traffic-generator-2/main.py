@@ -1,28 +1,60 @@
-from quixstreams import Application
-from quixstreams.sources import Source
-
 import os
 import random
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
+from quixstreams import Application
+from quixstreams.sources import Source
+
 load_dotenv()
 
 CEST = timezone(timedelta(hours=2))
 
 BRANDS = [
-    "Toyota", "Honda", "Ford", "BMW", "Mercedes",
-    "Audi", "Volkswagen", "Tesla", "Hyundai", "Kia",
-    "Nissan", "Chevrolet", "Mazda", "Subaru", "Volvo",
-    "Porsche", "Lexus", "Jaguar", "Ferrari", "Lamborghini",
+    "Toyota",
+    "Honda",
+    "Ford",
+    "BMW",
+    "Mercedes",
+    "Audi",
+    "Volkswagen",
+    "Tesla",
+    "Hyundai",
+    "Kia",
+    "Nissan",
+    "Chevrolet",
+    "Mazda",
+    "Subaru",
+    "Volvo",
+    "Porsche",
+    "Lexus",
+    "Jaguar",
+    "Ferrari",
+    "Lamborghini",
 ]
 
 COLOURS = [
-    "Red", "Blue", "Green", "Black", "White",
-    "Silver", "Grey", "Yellow", "Orange", "Purple",
-    "Brown", "Beige", "Gold", "Navy", "Teal",
-    "Maroon", "Coral", "Ivory", "Cyan", "Magenta",
+    "Red",
+    "Blue",
+    "Green",
+    "Black",
+    "White",
+    "Silver",
+    "Grey",
+    "Yellow",
+    "Orange",
+    "Purple",
+    "Brown",
+    "Beige",
+    "Gold",
+    "Navy",
+    "Teal",
+    "Maroon",
+    "Coral",
+    "Ivory",
+    "Cyan",
+    "Magenta",
 ]
 
 
@@ -49,9 +81,12 @@ class VehicleTrafficGenerator(Source):
         self._plate_counter = 0
         total_sent = 0
         second_offset = 0
-        run_id = "run_" + str(datetime.now(CEST)) + RUN_ID_PREFIX
+        # run_id = "run_" + str(datetime.now(CEST)) + RUN_ID_PREFIX
+        run_id = RUN_ID_PREFIX
         expected_per_second = len(BRANDS) * len(COLOURS) * MESSAGES_PER_BRAND_COLOUR
-        print(f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec")
+        print(
+            f"Generating {MESSAGES_PER_BRAND_COLOUR} message(s) per (brand, colour) pair — {expected_per_second:,} messages/sec"
+        )
         print(f"run_id={run_id}")
         print(f"Will run for {RUN_DURATION_SECONDS}s then stop.")
 
@@ -87,7 +122,9 @@ class VehicleTrafficGenerator(Source):
             remaining = 1.0 - elapsed
             if remaining > 0:
                 time.sleep(remaining)
-            print(f"Produced second {second_offset}/{RUN_DURATION_SECONDS} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}, run_id={run_id}, generation took: {elapsed:.3f}s")
+            print(
+                f"Produced second {second_offset}/{RUN_DURATION_SECONDS} ({second_start.isoformat()}) — messages this second: {second_sent:,}, total sent: {total_sent:,}, run_id={run_id}, generation took: {elapsed:.3f}s"
+            )
 
         print(f"Stopped. Total messages sent: {total_sent:,}")
 
